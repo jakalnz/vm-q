@@ -1,0 +1,959 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --text-primary:#1a1a1a;--text-secondary:#555;--text-muted:#888;--text-accent:#2563eb;
+  --border:#e0e0e0;--border-strong:#bbb;
+  --surface-1:#f8f8f8;--surface-2:#f0f0f0;
+  --bg-accent:#eff6ff;--fill-accent:#2563eb;
+  --bg-warning:#fff7ed;--text-warning:#9a3412;
+  --bg-danger:#fef2f2;--text-danger:#991b1b;
+  --radius:6px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --text-primary:#e8e8e8;--text-secondary:#aaa;--text-muted:#666;--text-accent:#60a5fa;
+  --border:#333;--border-strong:#555;
+  --surface-1:#1e1e1e;--surface-2:#2a2a2a;
+  --bg-accent:#1e3a5f;--fill-accent:#60a5fa;
+  --bg-warning:#2d1800;--text-warning:#fb923c;
+  --bg-danger:#2d0a0a;--text-danger:#f87171;
+}}
+body{font-family:var(--font-sans);color:var(--text-primary);background:transparent;font-size:13px}
+
+/* Layout */
+.shell{padding:.75rem 0}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:.9rem;flex-wrap:wrap}
+.tab{padding:5px 10px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--text-secondary);border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--text-accent);border-bottom-color:var(--fill-accent);font-weight:600}
+.tab:hover:not(.active){color:var(--text-primary)}
+.note{font-size:11px;color:var(--text-muted);padding:5px 10px;background:var(--surface-1);border-left:2px solid var(--border-strong);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:.75rem;line-height:1.5}
+.prog-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:.75rem;overflow:hidden}
+.prog-fill{height:100%;background:var(--fill-accent);border-radius:2px;transition:width .3s}
+
+/* Phase colours */
+.ph0-bg{background:#FAECE7}.ph0-tx{color:#993C1D}
+.ph1-bg{background:#FAEEDA}.ph1-tx{color:#633806}
+.ph2-bg{background:#E6F1FB}.ph2-tx{color:#0C447C}
+.ph3-bg{background:#EAF3DE}.ph3-tx{color:#3B6D11}
+.ph0-b{border-color:#993C1D55}.ph1-b{border-color:#63380655}
+.ph2-b{border-color:#0C447C55}.ph3-b{border-color:#3B6D1155}
+
+/* Sev colours */
+.s0{background:transparent;border-color:var(--border);color:var(--text-muted)}
+.s1{background:#E1F5EE;border-color:#9FE1CB;color:#085041}
+.s2{background:#9FE1CB;border-color:#5DCAA5;color:#04342C}
+.s3{background:#FAC775;border-color:#EF9F27;color:#412402}
+.s4{background:#F09595;border-color:#E24B4A;color:#501313}
+.s5{background:#E24B4A;border-color:#A32D2D;color:#fff}
+
+/* Matrix */
+.mat-wrap{overflow-x:auto}
+.mat{border-collapse:collapse;width:100%;min-width:520px}
+.mat td,.mat th{border:.5px solid var(--border)}
+.sym-cell{padding:4px 7px;background:var(--surface-2);width:155px;vertical-align:top;cursor:default}
+.sym-name{font-size:11px;font-weight:500;line-height:1.3}
+.sym-hint{font-size:10px;color:var(--text-secondary);margin-top:1px;line-height:1.3;font-style:italic}
+.sym-tag{display:inline-block;font-size:9px;font-weight:500;padding:1px 4px;border-radius:3px;margin-top:2px;background:var(--bg-warning);color:var(--text-warning)}
+
+.ph-cell{width:96px;text-align:center;cursor:pointer;position:relative;user-select:none;padding:4px 2px}
+.sev-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:1.5px solid transparent;margin:0 auto}
+.freq-bar-wrap{height:3px;background:var(--border);border-radius:2px;margin:2px auto 0;width:20px;overflow:hidden}
+.freq-bar{height:100%;border-radius:2px;transition:width .15s}
+
+/* Phase header */
+.ph-th{cursor:pointer;padding:0;width:96px;position:relative}
+.ph-th-inner{padding:5px 3px 4px;text-align:center}
+.ph-th-name{font-size:10px;font-weight:600}
+.ph-th-sub{font-size:9px;font-weight:400;opacity:.7;display:block;margin-top:1px}
+.ph-th-range{font-size:9px;opacity:.65;display:block;margin-top:1px;font-style:italic}
+.dur-pill{display:inline-flex;align-items:center;gap:2px;margin-top:3px;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:500;border:1px solid transparent;white-space:nowrap}
+.dur-pill-empty{font-size:9px;opacity:.5;display:block;margin-top:2px;text-decoration:underline dotted;cursor:pointer}
+
+/* Popovers */
+.popover{position:absolute;z-index:200;background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px;min-width:175px;top:calc(100% + 3px);left:50%;transform:translateX(-50%)}
+.popover::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:var(--surface-2);border-left:.5px solid var(--border-strong);border-top:.5px solid var(--border-strong)}
+.pop-title{font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;text-align:center}
+.pop-opt{width:100%;padding:3px 7px;font-size:11px;border-radius:5px;cursor:pointer;border:.5px solid var(--border);background:transparent;color:var(--text-primary);text-align:left;display:flex;justify-content:space-between;gap:5px;margin-bottom:2px}
+.pop-opt:hover{background:var(--surface-1)}
+.pop-opt.sel{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
+.pop-note{font-size:9px;opacity:.7}
+.pop-close{display:block;margin-top:4px;font-size:10px;color:var(--text-muted);text-align:center;cursor:pointer}
+
+/* Frequency mini-popover */
+.freq-pop{position:absolute;z-index:201;background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:6px;min-width:150px;top:calc(100% + 3px);left:50%;transform:translateX(-50%)}
+.freq-pop::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:var(--surface-2);border-left:.5px solid var(--border-strong);border-top:.5px solid var(--border-strong)}
+.freq-opt{width:100%;padding:3px 7px;font-size:11px;border-radius:5px;cursor:pointer;border:.5px solid var(--border);background:transparent;color:var(--text-primary);text-align:left;display:flex;justify-content:space-between;gap:5px;margin-bottom:2px}
+.freq-opt:hover{background:var(--surface-1)}
+.freq-opt.sel{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
+
+/* Severity tooltip */
+.sev-tip{position:fixed;z-index:9999;pointer-events:none;background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px 8px;width:320px;box-shadow:0 4px 18px rgba(0,0,0,.13);opacity:0;transition:opacity .1s}
+.sev-tip.vis{opacity:1}
+.tip-name{font-size:11px;font-weight:600;margin-bottom:5px;padding-bottom:4px;border-bottom:.5px solid var(--border)}
+.tip-row{display:flex;align-items:flex-start;gap:6px;padding:2px 4px;border-radius:4px;margin-bottom:2px}
+.tip-badge{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;border:1.5px solid transparent;flex-shrink:0;margin-top:1px}
+.tip-text{font-size:10px;line-height:1.35}
+.tip-text b{font-weight:600;display:block}
+
+/* Group rows */
+.grp-div td{height:2px;background:var(--border);padding:0}
+.grp-lbl td{padding:2px 7px;background:var(--surface-1);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+
+/* Legend */
+.legend{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:.55rem}
+.leg-i{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-secondary)}
+.leg-d{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;border:1px solid transparent;flex-shrink:0}
+
+/* Detail tabs */
+.section{margin-bottom:1rem}
+.sec-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem}
+.q-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:var(--radius);margin-bottom:3px;background:var(--surface-1);flex-wrap:wrap}
+.q-text{font-size:11px}
+.q-sub{font-size:10px;color:var(--text-secondary);margin-top:1px}
+.chips{display:flex;gap:3px;flex-wrap:wrap}
+.chip{padding:2px 7px;border-radius:20px;font-size:10px;cursor:pointer;border:.5px solid var(--border);background:var(--surface-2);color:var(--text-secondary);white-space:nowrap}
+.chip.on{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
+.radios{display:flex;gap:3px;flex-wrap:wrap}
+.radio{padding:2px 7px;border-radius:20px;font-size:10px;cursor:pointer;border:.5px solid var(--border);background:var(--surface-2);color:var(--text-secondary);white-space:nowrap}
+.radio.sel{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
+
+/* Triggers */
+.trg-group{margin-bottom:.9rem}
+.trg-group-lbl{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.3rem;padding-bottom:2px;border-bottom:.5px solid var(--border)}
+
+/* Summary */
+.sum-flag{padding:4px 7px;border-radius:var(--radius);font-size:11px;margin-bottom:3px}
+.send-btn{display:flex;align-items:center;gap:5px;padding:5px 13px;border-radius:var(--radius);border:.5px solid var(--border-strong);background:transparent;color:var(--text-primary);font-size:11px;cursor:pointer;margin-top:.75rem}
+.send-btn:hover{background:var(--surface-1)}
+.empty-st{font-size:11px;color:var(--text-muted);font-style:italic}
+
+/* Mobile card matrix */
+.mob-card{background:var(--surface-1);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px}
+.mob-card .sym-name{font-size:12px}
+.mob-phase-sel{display:flex;gap:4px;margin:6px 0;flex-wrap:wrap}
+.mob-phase-btn{flex:1;min-width:70px;padding:4px 6px;border-radius:5px;font-size:10px;font-weight:600;text-align:center;cursor:pointer;border:1.5px solid transparent;opacity:.55}
+.mob-phase-btn.on{opacity:1}
+.mob-sev-row{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.mob-sev-btn{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer}
+.mob-sev-btn.sel{border-color:currentColor}
+.mob-freq-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
+.mob-freq-btn{padding:2px 8px;border-radius:12px;font-size:10px;cursor:pointer;border:.5px solid var(--border);background:var(--surface-2);color:var(--text-secondary)}
+.mob-freq-btn.sel{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
+@media(max-width:640px){
+  #mat-wrap{display:none !important}
+  #mobile-mat{display:block !important}
+}
+</style>
+</head>
+<body>
+
+<!-- Floating severity tooltip -->
+<div class="sev-tip" id="sev-tip">
+  <div class="tip-name" id="tt-name"></div>
+  <div id="tt-rows"></div>
+</div>
+
+<div class="shell">
+<div class="tabs" id="tab-bar">
+  <button class="tab active" onclick="showTab('overview')">Overview</button>
+  <button class="tab" onclick="showTab('d-vest')">Vestibular</button>
+  <button class="tab" onclick="showTab('d-tinnitus')">Ear sounds</button>
+  <button class="tab" onclick="showTab('d-pressure')">Ear pressure</button>
+  <button class="tab" onclick="showTab('d-sound')">Sound sensitivity</button>
+  <button class="tab" onclick="showTab('d-pain')">Ear pain</button>
+  <button class="tab" onclick="showTab('d-visual')">Visual</button>
+  <button class="tab" onclick="showTab('d-head')">Headache</button>
+  <button class="tab" onclick="showTab('d-cog')">Cognitive & mood</button>
+  <button class="tab" onclick="showTab('d-body')">Body & autonomic</button>
+  <button class="tab" onclick="showTab('triggers')">Triggers</button>
+  <button class="tab" onclick="showTab('summary')">Summary ↗</button>
+</div>
+
+<!-- OVERVIEW TAB -->
+<div id="tab-overview">
+  <div class="note">
+    <b>What this is:</b> a self-report tool to help you and your clinician understand the pattern, triggers, and impact of your vestibular migraine (VM) symptoms in more detail. It is educational only and does not provide a diagnosis. Your responses stay in this browser tab unless you choose to download or share them — nothing is sent anywhere automatically.
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+  <div class="note">
+    <b>Phase headers</b> — tap to set how long that phase typically lasts for you. &nbsp;|&nbsp;
+    <b>Symptom cells</b> — click to cycle severity (0→5). Right-click (or long-press) to set how often this symptom occurs in that phase. Hover for descriptors.
+  </div>
+  <div class="legend">
+    <span style="font-size:10px;font-weight:600;color:var(--text-secondary);margin-right:2px">Severity:</span>
+    <div class="leg-i"><div class="leg-d s0">–</div>None</div>
+    <div class="leg-i"><div class="leg-d s1">1</div>Mild</div>
+    <div class="leg-i"><div class="leg-d s2">2</div>Moderate</div>
+    <div class="leg-i"><div class="leg-d s3">3</div>Marked</div>
+    <div class="leg-i"><div class="leg-d s4">4</div>Severe</div>
+    <div class="leg-i"><div class="leg-d s5">5</div>Very severe</div>
+    <span style="margin-left:8px;font-size:10px;font-weight:600;color:var(--text-secondary)">Frequency bar below dot:</span>
+    <div class="leg-i"><div style="width:20px;height:3px;background:#9FE1CB;border-radius:2px"></div>Rarely ~25%</div>
+    <div class="leg-i"><div style="width:20px;height:3px;background:#FAC775;border-radius:2px"></div>Sometimes ~50%</div>
+    <div class="leg-i"><div style="width:20px;height:3px;background:#F09595;border-radius:2px"></div>Often ~75%</div>
+    <div class="leg-i"><div style="width:20px;height:3px;background:#E24B4A;border-radius:2px"></div>Always ~100%</div>
+  </div>
+  <div class="mat-wrap" id="mat-wrap">
+  <table class="mat">
+    <thead><tr>
+      <th style="background:var(--surface-1);width:155px"></th>
+      <th id="th-0" class="ph-th"></th>
+      <th id="th-1" class="ph-th"></th>
+      <th id="th-2" class="ph-th"></th>
+      <th id="th-3" class="ph-th"></th>
+    </tr></thead>
+    <tbody id="mat-body"></tbody>
+  </table>
+  </div>
+  <div id="mobile-mat" style="display:none"></div>
+</div>
+
+<!-- DETAIL TABS (populated by JS) -->
+<div id="tab-d-vest"     style="display:none"></div>
+<div id="tab-d-tinnitus" style="display:none"></div>
+<div id="tab-d-pressure" style="display:none"></div>
+<div id="tab-d-sound"    style="display:none"></div>
+<div id="tab-d-pain"     style="display:none"></div>
+<div id="tab-d-visual"   style="display:none"></div>
+<div id="tab-d-head"     style="display:none"></div>
+<div id="tab-d-cog"      style="display:none"></div>
+<div id="tab-d-body"     style="display:none"></div>
+
+<!-- TRIGGERS TAB -->
+<div id="tab-triggers" style="display:none">
+  <div class="note">Tick everything that reliably makes your symptoms worse or starts an attack. Don't include things that only occasionally coincide.</div>
+  <div id="trg-content"></div>
+</div>
+
+<!-- SUMMARY TAB -->
+<div id="tab-summary" style="display:none">
+  <div class="section"><div class="sec-lbl">Episode timeline — severity · frequency</div><div id="sum-mat"></div></div>
+  <div class="section"><div class="sec-lbl">Dominant phase by total symptom burden</div><div id="sum-dom" style="font-size:11px;padding:6px 9px;background:var(--surface-1);border-radius:var(--radius)">—</div></div>
+  <div class="section"><div class="sec-lbl">Clinical flags</div><div id="sum-flags"></div></div>
+  <div class="section"><div class="sec-lbl">Triggers selected</div><div id="sum-trg" style="font-size:11px;padding:6px 9px;background:var(--surface-1);border-radius:var(--radius)">None selected</div></div>
+  <div class="note">This questionnaire does not transmit data anywhere on its own. Use the buttons below to save your results — bring the clinician summary to your appointment, or keep the JSON file if you're asked to share anonymised data with a research database.</div>
+  <button class="send-btn" onclick="downloadReport()">Download clinician summary (text) ↓</button>
+  <button class="send-btn" onclick="downloadJSON()">Download responses (JSON) ↓</button>
+</div>
+</div><!-- end shell -->
+
+<script>
+// ─── Phase definitions ─────────────────────────────────────────────────────
+const PHASES=[
+  {id:'pre', name:'Warning period',  sub:'Pre-ictal',   range:'Minutes to 1–2 days before',
+   bg:'#FAECE7',tx:'#993C1D',
+   dur:[{id:'mins',l:'Minutes',n:'under 30 min'},{id:'hrs',l:'Hours',n:'30 min – 12 h'},{id:'1d',l:'~1 day',n:'12 – 24 h'},{id:'2d',l:'1–2 days',n:'full prodrome'},{id:'v',l:'Varies',n:'no fixed pattern'}]},
+  {id:'ict', name:'During the spell',sub:'Ictal',       range:'5 minutes to over 24 hours',
+   bg:'#FAEEDA',tx:'#633806',
+   dur:[{id:'u5',l:'< 5 min',n:'very brief'},{id:'5to30',l:'5–30 min',n:'short attack'},{id:'30to4h',l:'30 min – 4 h',n:'typical'},{id:'4to24',l:'4 – 24 h',n:'prolonged'},{id:'gt24',l:'> 24 h',n:'extended / atypical'}]},
+  {id:'post',name:'Recovery period', sub:'Post-ictal',  range:'Minutes to 2–3 days after',
+   bg:'#E6F1FB',tx:'#0C447C',
+   dur:[{id:'mins',l:'Minutes',n:'rapid'},{id:'hrs',l:'Hours',n:'same-day'},{id:'1d',l:'~1 day',n:'overnight'},{id:'2to3d',l:'2–3 days',n:'prolonged'},{id:'v',l:'Varies',n:'inconsistent'}]},
+  {id:'inter',name:'Between spells', sub:'Inter-ictal', range:'Days to continuous',
+   bg:'#EAF3DE',tx:'#3B6D11',
+   dur:[{id:'days',l:'Days',n:'clustered < 1 wk'},{id:'wks',l:'1–2 weeks',n:'frequent'},{id:'mo',l:'~ 1 month',n:'monthly'},{id:'mos',l:'Months',n:'infrequent'},{id:'ong',l:'Continuous',n:'always present'}]},
+];
+
+const SS=[
+  {bg:'transparent',bo:'var(--border)',tx:'var(--text-muted)'},
+  {bg:'#E1F5EE',bo:'#9FE1CB',tx:'#085041'},
+  {bg:'#9FE1CB',bo:'#5DCAA5',tx:'#04342C'},
+  {bg:'#FAC775',bo:'#EF9F27',tx:'#412402'},
+  {bg:'#F09595',bo:'#E24B4A',tx:'#501313'},
+  {bg:'#E24B4A',bo:'#A32D2D',tx:'#ffffff'},
+];
+const SL=['','Mild','Moderate','Marked','Severe','Very severe'];
+const FREQ_OPTS=[
+  {id:null,l:'Not set',pct:0,clr:'var(--border)'},
+  {id:'r',l:'Rarely',pct:25,clr:'#9FE1CB'},
+  {id:'s',l:'Sometimes',pct:50,clr:'#FAC775'},
+  {id:'o',l:'Often',pct:75,clr:'#F09595'},
+  {id:'a',l:'Always',pct:100,clr:'#E24B4A'},
+];
+
+// ─── Symptom groups ────────────────────────────────────────────────────────
+const GROUPS=[
+  {id:'g-vest', label:'Vestibular'},
+  {id:'g-tin',  label:'Ear sounds — tinnitus'},
+  {id:'g-snd',  label:'Sound sensitivity'},
+  {id:'g-pres', label:'Ear pressure & blockage'},
+  {id:'g-pain', label:'Ear pain'},
+  {id:'g-vis',  label:'Visual'},
+  {id:'g-head', label:'Head pain, light & nausea'},
+  {id:'g-neck', label:'Neck, skin & smell'},
+  {id:'g-cog',  label:'Cognitive & mood'},
+  {id:'g-auto', label:'Autonomic & other'},
+];
+
+// ─── Symptoms ──────────────────────────────────────────────────────────────
+// Anchors: severity 1–5, no phase-specific language, no cross-references to other symptoms
+const SYMS=[
+  // Vestibular
+  {id:'vertigo',grp:'g-vest',name:'Vertigo or spinning',hint:'Room spinning or strong sense of movement when still',tag:null,
+   a:[null,
+    'Mild sense of movement or unsteadiness. Can carry on with what you are doing, just more carefully.',
+    'Clear spinning sensation that forces you to stop activity. Can stay upright if you hold on to something.',
+    'Severe spinning that makes you lie down. Cannot stand, walk, or open your eyes comfortably.',
+    'Extremely violent spinning with inability to move. Vomiting. Distressing and incapacitating.',
+    'Prolonged, unrelenting vertigo lasting more than 24 hours. Requires urgent medical attention.']},
+  {id:'unstable',grp:'g-vest',name:'Background unsteadiness',hint:'A persistent low-level rocking, floating, or off-balance feeling',tag:'may indicate PPPD overlap',
+   a:[null,
+    'Very slight sense of being off-balance. Barely noticeable in everyday situations.',
+    'Noticeable unsteadiness when walking, on uneven ground, or in crowds. You adjust how you move.',
+    'Constant unsteadiness that affects your confidence walking, driving, or using stairs.',
+    'Severe unsteadiness most of the day. Avoiding public spaces or needing to hold onto walls.',
+    'Unable to walk safely without physical support on most days.']},
+  {id:'motion',grp:'g-vest',name:'Sensitivity to moving images or busy environments',hint:'Scrolling screens, traffic, busy patterns, or moving crowds provoke symptoms',tag:null,
+   a:[null,
+    'Mild discomfort in very fast-moving visual situations. Easy to avoid without much impact on life.',
+    'Scrolling on a screen, being a passenger in traffic, or walking through a busy shop reliably causes dizziness or nausea.',
+    'Most busy or moving visual environments are difficult. You are actively changing routes, shops, or activities.',
+    'Almost all busy environments are intolerable. Severely restricting independence and ability to work or socialise.',
+    'Unable to tolerate any visually complex or moving environment. Largely confined to familiar, controlled spaces.']},
+  // Ear sounds
+  {id:'tin',grp:'g-tin',name:'Ringing, buzzing, or hissing',hint:'A steady sound in one or both ears that other people cannot hear',tag:null,
+   a:[null,
+    'Very faint and easy to ignore. Background noise covers it up. No effect on concentration or sleep.',
+    'Clearly audible in quiet settings. You notice it but can focus through it. Comes and goes.',
+    'Hard to tune out even with background noise. Gets in the way of conversations or sleep. You have started paying close attention to it.',
+    'Loud and persistent. Disrupts your ability to concentrate, work, or sleep. Causes real distress or anxiety.',
+    'So loud and intrusive that it drowns out background sounds and dominates your attention. Cannot rest or work at all.']},
+  {id:'whoosh',grp:'g-tin',name:'Whooshing, rushing, or pulsing sound',hint:'A rhythmic sound that may beat with your heartbeat or surge with head movement',tag:'screen for pulsatile tinnitus if constant between spells',
+   a:[null,
+    'Faint and intermittent. Easy to dismiss. No impact on daily life.',
+    'Clearly audible rushing or pulsing sound. Comes on with head movement or position changes.',
+    'Loud rhythmic sound that is difficult to ignore. Causes distress or worry about your health.',
+    'Dominant auditory experience. Causing significant anxiety, including worry about heart or blood vessel problems.',
+    'Continuous, overwhelming rushing or pulsing sound. Cannot rest, think, or carry on daily activities.']},
+  // Sound sensitivity
+  {id:'snd',grp:'g-snd',name:'Sounds feel too loud or physically painful',hint:'Everyday sounds physically hurt or overwhelm you — not just unpleasant but painful or intolerable',tag:'hyperacusis-like',
+   a:[null,
+    'Slightly more sensitive than usual. Very loud environments are uncomfortable but you can manage briefly.',
+    'Certain busy or loud environments cause real discomfort. You choose quieter alternatives when possible.',
+    'Most busy environments are intolerable. You are wearing earplugs regularly, avoiding social occasions, or leaving places early.',
+    'Sound sensitivity affects nearly every environment, including your own home. Severely restricts what you can do and where you can go.',
+    'Cannot tolerate almost any sound environment. Need silence or very minimal noise for most of the day.']},
+  {id:'phono',grp:'g-snd',name:'Any sound unbearable during a bad spell',hint:'Specifically when you are feeling most unwell — not a general ongoing sensitivity',tag:'phonophobia',
+   a:[null,
+    'Sounds feel slightly sharper and more irritating at your worst. You prefer quiet but can manage normal household noise.',
+    'Clearly aversive when you are unwell. You move to a quieter room or ask others to lower their voices.',
+    'Need complete or near-complete silence. Cannot tolerate conversation, television, or a phone in the next room.',
+    'Any sound at all causes acute distress. Requires silent, dark environment.',
+    'Sound causes physical pain or panic at your worst and significantly extends or worsens the episode.']},
+  {id:'miso',grp:'g-snd',name:'Specific sounds trigger instant rage or disgust',hint:'Not because the sounds are loud — but the sound itself (e.g. chewing, tapping) produces an automatic overwhelming reaction',tag:'misophonia-like',
+   a:[null,
+    'Mild irritation to one or two specific sounds. You notice it but can suppress the reaction.',
+    'Clear emotional reaction — frustration or disgust — to particular sounds. Starting to avoid situations where you might hear them.',
+    'Strong immediate anger or disgust response to trigger sounds. Affecting meals, shared spaces, or working relationships.',
+    'Severe, hard-to-hide reactions to trigger sounds. Restricting your environments and relationships significantly.',
+    'Extreme reactions — rage, panic, or urgent need to leave — triggered by specific sounds. Daily life is seriously compromised.']},
+  {id:'recruit',grp:'g-snd',name:'Very narrow comfortable hearing range',hint:'Soft sounds are hard to hear, but sounds only slightly louder than that are immediately painful — almost no in-between',tag:'possible recruitment — audiology referral recommended',
+   a:[null,
+    'Slight difficulty catching quiet speech, but only mild discomfort at louder volumes.',
+    'Noticeably hard to hear quiet sounds, but moderately loud sounds already feel too sharp or uncomfortable.',
+    'Very narrow range where sound feels comfortable. Small increases in volume immediately feel painful.',
+    'Almost no comfortable volume range. Normal conversation is either too quiet to follow or too loud to tolerate.',
+    'Essentially no comfortable hearing range. All levels are either inaudible or painful.']},
+  // Ear pressure
+  {id:'pres',grp:'g-pres',name:'Ear pressure, fullness, or heaviness',hint:'A blocked, loaded, or heavy feeling in one or both ears',tag:null,
+   a:[null,
+    'A vague sense of fullness that comes and goes. Yawning or swallowing temporarily helps. Easy to overlook.',
+    'A definite loaded or plugged feeling you are aware of throughout the day. You can focus through it.',
+    'Marked pressure or tightness that influences what you do — avoiding certain environments, travelling, or activities.',
+    'Heavy pressure that spreads into your jaw, temple, or the top of your head. Prevents you from functioning normally.',
+    'Severe and incapacitating pressure. Completely overwhelms your ability to carry on daily activities.']},
+  {id:'block',grp:'g-pres',name:'Muffled or blocked hearing',hint:'Like having cotton wool in your ears, or the sensation of coming up from underwater',tag:null,
+   a:[null,
+    'Subtle muffling that clears on its own. No practical impact on your ability to hear in daily life.',
+    'Noticeable muffling of voices. You find yourself asking people to repeat themselves.',
+    'Persistent blockage. Difficult to follow conversations especially in groups or with background noise.',
+    'Dense blockage with a significant reduction in how clearly you can hear. Causes real concern.',
+    'Complete apparent blockage. Cannot hear clearly enough to communicate. Disorientating and severely distressing.']},
+  // Ear pain
+  {id:'pain',grp:'g-pain',name:'Pain in or around the ear',hint:'Can overlap with the pressure sensation — describe both even if they feel related',tag:null,
+   a:[null,
+    'Vague tenderness around the ear that is fleeting and mild.',
+    'Definite discomfort you have noticed and would mention to a clinician. May overlap with a sense of fullness.',
+    'Clear pain that changes what you do — being careful about jaw movement, pressure changes, or contact with the ear.',
+    'Significant pain that has driven you to seek urgent assessment. Disrupts eating, sleeping, or concentrating.',
+    'Severe and incapacitating pain. The dominant symptom. Has required emergency or urgent care.']},
+  // Visual
+  {id:'aura',grp:'g-vis',name:'Visual aura — zigzags, blind spots, or shimmering',hint:'A visual disturbance that builds gradually over minutes, then fades',tag:null,
+   a:[null,
+    'Occasional faint shimmer at the edge of your vision. Very brief and barely disturbing.',
+    'A clear zigzag arc, crescent of light, or blind spot. Lasts around 10–30 minutes. Familiar and recognisable.',
+    'Frequent and fully developed visual aura that disrupts reading, screen use, or driving.',
+    'Severe or prolonged aura that prevents activity and causes significant fear or distress.',
+    'Incapacitating visual disturbance. Unable to see clearly. Requires urgent assessment if this is a new pattern.']},
+  {id:'snow',grp:'g-vis',name:'Visual static or snow — constant visual grain',hint:'Like TV static permanently overlaid on your vision, present even when you feel well',tag:'visual snow syndrome — may need neuro-ophthalmology',
+   a:[null,
+    'Very faint static only noticeable in dim light or against plain backgrounds.',
+    'Constant but manageable visual grain across your whole visual field. Most noticeable in low light.',
+    'Persistent static overlaid on all your vision. Distracting and visually tiring throughout the day.',
+    'Heavy visual snow that significantly affects your ability to read, use screens, or see detail clearly.',
+    'Overwhelming visual static. Your vision is significantly degraded across all situations.']},
+  {id:'trail',grp:'g-vis',name:'Afterimages or trailing behind moving objects',hint:'Objects leave a ghost or smear as they move; bright lights leave their shape when you look away',tag:null,
+   a:[null,
+    'Occasional very faint afterimage only in very bright or high-contrast situations.',
+    'Clear afterimages from lights or moving objects. Mildly disorientating but not disabling.',
+    'Frequent trailing or afterimages. Interfering with reading, watching movement, or using screens.',
+    'Prominent visual trailing that makes it very difficult to follow movement or read without distortion.',
+    'Severely disabling visual trailing that prevents use of screens or any situation involving movement.']},
+  // Head, light & nausea
+  {id:'head',grp:'g-head',name:'Head pain',hint:'Including pressure, tightness, or throbbing — on one side or both; can be mild or severe',tag:null,
+   a:[null,
+    'Mild background head pain that does not stop you doing things.',
+    'Moderate head pain with at least one typical feature — one-sided, throbbing, or made worse by movement or activity.',
+    'Definite head pain requiring medication. Limits your activity and ability to function.',
+    'Severe head pain requiring you to lie down and rest. Accompanied by nausea or extreme light sensitivity.',
+    'Debilitating head pain with vomiting. Completely unable to function. May require medical treatment.']},
+  {id:'light',grp:'g-head',name:'Light sensitivity',hint:'Light feels brighter, more painful, or more overwhelming than it should',tag:null,
+   a:[null,
+    'Mildly more sensitive than usual outdoors. Sunglasses help. No difficulty indoors.',
+    'Overhead or artificial light is uncomfortable. You prefer dimmer environments and natural light.',
+    'Screen use is difficult. You wear sunglasses indoors or in situations where you normally would not.',
+    'Most light is painful. You need a darkened room and avoid any bright or flickering light sources.',
+    'Complete inability to open your eyes in any lit environment. Total light exclusion required.']},
+  {id:'nausea',grp:'g-head',name:'Nausea or vomiting',hint:'Feeling sick or being sick — ranging from mild queasiness to repeated vomiting',tag:null,
+   a:[null,
+    'Mild queasiness. No vomiting. Does not affect eating or activity.',
+    'Definite nausea. No vomiting but avoiding food. Can manage light activity with care.',
+    'Nausea severe enough to stop eating. Occasional vomiting. Must rest or lie down.',
+    'Repeated vomiting. Cannot keep food or medication down. Needs to rest completely.',
+    'Prolonged or uncontrollable vomiting. May require medical help or IV fluids.']},
+  // Neck, skin & smell
+  {id:'neck',grp:'g-neck',name:'Neck pain or stiffness',hint:'A reliable ache, tightness, or stiffness, often at the base of the skull or one side of the neck',tag:null,
+   a:[null,
+    'Mild tightness or tension that you notice but can easily ignore.',
+    'Definite neck ache or stiffness. Restricts how freely you turn your head.',
+    'Marked neck pain that restricts your movement and affects your posture or activity.',
+    'Severe neck pain that needs rest or pain relief and is clearly part of the episode.',
+    'Incapacitating neck and head stiffness. The dominant symptom. Prevents normal head movement.']},
+  {id:'smell',grp:'g-neck',name:'Smell sensitivity — odours trigger or worsen symptoms',hint:'Strong smells cause your symptoms to start or get significantly worse',tag:'osmophobia',
+   a:[null,
+    'Mildly more bothered by strong smells than usual. Manageable with ventilation.',
+    'Certain specific smells clearly make you feel worse. Avoiding those environments when possible.',
+    'Strong smells reliably trigger or escalate your symptoms. Actively restricting your exposure.',
+    'Many everyday smells are disabling. Significantly limiting shared spaces, shops, or social occasions.',
+    'Almost any strong smell triggers an acute worsening. Severely limiting your ability to be in shared spaces.']},
+  {id:'allodynia',grp:'g-neck',name:'Scalp or skin tenderness',hint:'Ordinary touch becomes painful — a hairbrush, pillow, glasses frame, or earrings feel painful or uncomfortable',tag:'cutaneous allodynia — treat head pain early for best response',
+   a:[null,
+    'Very mild scalp sensitivity. Noticeable but does not change what you do.',
+    'Clear scalp sensitivity. Removing glasses, earrings, or hair accessories to get more comfortable.',
+    'Marked tenderness. Cannot brush your hair or lie comfortably on a pillow.',
+    'Severe skin tenderness extending from scalp to face, neck, or arms. Touch is genuinely painful.',
+    'Whole-body touch sensitivity. Cannot tolerate being touched at all. Extremely distressing.']},
+  // Cognitive & mood
+  {id:'fog',grp:'g-cog',name:'Brain fog — slowed thinking and word-finding',hint:'Difficulty finding words, following a conversation, or thinking clearly',tag:null,
+   a:[null,
+    'Slightly slower to think or recall words. Easy to push through with effort.',
+    'Clearly slowed thinking. Losing words in conversation. Manageable with patience.',
+    'Marked cognitive slowing. Cannot follow complex conversations or make decisions clearly.',
+    'Severe cognitive fog. Difficulty with basic tasks — reading, speaking clearly, or remembering instructions.',
+    'Completely unable to think, communicate, or concentrate. More disabling than the physical symptoms.']},
+  {id:'anxiety',grp:'g-cog',name:'Anxiety and worry about your symptoms or attacks',hint:'Fear of attacks happening, or anxiety in places where one might occur',tag:null,
+   a:[null,
+    'Mild background worry that does not change what you do.',
+    'Definite anxiety about your condition. Starting to plan activities differently to manage risk.',
+    'Significant anxiety. Avoiding certain situations, checking for exits, or reducing your independence.',
+    'Severe anxiety or episodes of panic. Cannot travel, socialise, or work freely because of fear.',
+    'Incapacitating anxiety that confines you more than the symptoms themselves do.']},
+  {id:'mood',grp:'g-cog',name:'Low mood or depression related to your condition',hint:'Sadness, loss of enjoyment, or hopelessness that is caused or made worse by living with your symptoms',tag:null,
+   a:[null,
+    'Mild low mood during difficult patches. Bounces back between episodes.',
+    'Noticeable low mood affecting your motivation and enjoyment of things you usually value.',
+    'Significant low mood affecting your relationships, work, and sense of self.',
+    'Severe depression. Loss of sense of purpose or ability to engage with life.',
+    'Profound depression requiring urgent mental health support.']},
+  // Autonomic
+  {id:'auto',grp:'g-auto',name:'Body automatic responses — sweating, pallor, gut symptoms',hint:'Physical body reactions not under your control — going pale, sweating, fast heartbeat, digestive upset',tag:null,
+   a:[null,
+    'One or two mild symptoms that are easy to overlook.',
+    'Clearly noticeable — e.g. going pale, becoming clammy, or experiencing loose stools.',
+    'Several of these responses occur together and are a recognisable part of your pattern.',
+    'Marked autonomic involvement — heavy sweating, significant digestive disturbance, or palpitations. Distressing.',
+    'Severe responses that dominate the episode. May include near-fainting or require urgent medical attention.']},
+];
+
+// ─── State ─────────────────────────────────────────────────────────────────
+const sev={},freq={},durSel={pre:null,ict:null,post:null,inter:null};
+const trgSel=new Set();
+SYMS.forEach(s=>PHASES.forEach((p,i)=>{sev[s.id+':'+i]=0;freq[s.id+':'+i]=null;}));
+
+// ─── Open popover tracking ─────────────────────────────────────────────────
+let openPop=null;
+function closePop(){if(openPop){openPop.remove();openPop=null;}}
+
+// ─── Phase headers ─────────────────────────────────────────────────────────
+function buildHdr(pi){
+  const ph=PHASES[pi];const th=document.getElementById('th-'+pi);th.innerHTML='';
+  const inner=document.createElement('div');inner.className='ph-th-inner';inner.style.background=ph.bg;
+  const nm=document.createElement('div');nm.className='ph-th-name';nm.style.color=ph.tx;nm.textContent=ph.name;inner.appendChild(nm);
+  const sub=document.createElement('span');sub.className='ph-th-sub';sub.style.color=ph.tx;sub.textContent=ph.sub;inner.appendChild(sub);
+  const rng=document.createElement('span');rng.className='ph-th-range';rng.style.color=ph.tx;rng.textContent=ph.range;inner.appendChild(rng);
+  const d=durSel[ph.id];const opt=d?ph.dur.find(o=>o.id===d):null;
+  const pill=document.createElement('div');
+  if(opt){pill.className='dur-pill';pill.style.cssText=`background:${ph.bg};color:${ph.tx};border-color:${ph.tx}55`;pill.textContent='⏱ '+opt.l;}
+  else{pill.className='dur-pill-empty';pill.style.color=ph.tx;pill.textContent='set duration ↓';}
+  inner.appendChild(pill);th.appendChild(inner);
+  th.onclick=(e)=>{e.stopPropagation();openDurPop(pi,th);};
+}
+function openDurPop(pi,el){
+  closePop();const ph=PHASES[pi];const pop=document.createElement('div');pop.className='popover';
+  const t=document.createElement('div');t.className='pop-title';t.textContent=ph.name+' — how long does this phase typically last?';pop.appendChild(t);
+  const cur=durSel[ph.id];
+  ph.dur.forEach(o=>{const b=document.createElement('button');b.className='pop-opt'+(cur===o.id?' sel':'');
+    b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.n}</span>`;
+    b.onclick=(e)=>{e.stopPropagation();durSel[ph.id]=cur===o.id?null:o.id;closePop();buildHdr(pi);};pop.appendChild(b);});
+  const c=document.createElement('span');c.className='pop-close';c.textContent='close';c.onclick=(e)=>{e.stopPropagation();closePop();};pop.appendChild(c);
+  el.style.position='relative';el.appendChild(pop);openPop=pop;
+  setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
+}
+
+// ─── Frequency popover ─────────────────────────────────────────────────────
+function openFreqPop(symId,pi,td){
+  closePop();const pop=document.createElement('div');pop.className='freq-pop';
+  const t=document.createElement('div');t.className='pop-title';t.textContent='How often does this occur?';pop.appendChild(t);
+  const cur=freq[symId+':'+pi];
+  FREQ_OPTS.forEach(o=>{
+    const b=document.createElement('button');b.className='freq-opt'+(cur===o.id?' sel':'');
+    b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.pct?o.pct+'%':''}</span>`;
+    b.onclick=(e)=>{e.stopPropagation();freq[symId+':'+pi]=cur===o.id?null:o.id;closePop();renderMatrix();renderMobileMatrix();};pop.appendChild(b);});
+  const c=document.createElement('span');c.className='pop-close';c.textContent='close';c.onclick=(e)=>{e.stopPropagation();closePop();};pop.appendChild(c);
+  td.style.position='relative';td.appendChild(pop);openPop=pop;
+  setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
+}
+
+// ─── Severity tooltip ──────────────────────────────────────────────────────
+const svTip=document.getElementById('sev-tip');
+let hideT=null;
+function showTip(symId,cellEl){
+  clearTimeout(hideT);const sym=SYMS.find(s=>s.id===symId);if(!sym)return;
+  document.getElementById('tt-name').textContent=sym.name;
+  const rows=document.getElementById('tt-rows');rows.innerHTML='';
+  for(let v=1;v<=5;v++){
+    const sc=SS[v];const row=document.createElement('div');row.className='tip-row';row.style.background=sc.bg+'22';
+    row.innerHTML=`<div class="tip-badge" style="background:${sc.bg};border-color:${sc.bo};color:${sc.tx}">${v}</div><div class="tip-text"><b style="color:${sc.tx==='#ffffff'?'var(--text-primary)':sc.tx}">${SL[v]}</b>${sym.a[v]||''}</div>`;
+    rows.appendChild(row);
+  }
+  const r=cellEl.getBoundingClientRect();const w=310;
+  let left=r.right+8;let top=r.top+r.height/2-20;
+  if(window.innerWidth-r.right<w+14) left=r.left-w-8;
+  top=Math.max(8,Math.min(top,window.innerHeight-340));
+  svTip.style.cssText=`left:${left}px;top:${top}px;width:${w}px`;
+  svTip.classList.add('vis');
+}
+function hideTip(){hideT=setTimeout(()=>svTip.classList.remove('vis'),80);}
+
+// ─── Matrix ─────────────────────────────────────────────────────────────────
+function renderMatrix(){
+  const tb=document.getElementById('mat-body');tb.innerHTML='';
+  let lastG='';
+  SYMS.forEach(sym=>{
+    if(sym.grp!==lastG){
+      if(lastG!==''){const sp=document.createElement('tr');sp.className='grp-div';const stc=document.createElement('td');stc.colSpan=5;sp.appendChild(stc);tb.appendChild(sp);}
+      const gl=document.createElement('tr');gl.className='grp-lbl';const gtc=document.createElement('td');gtc.colSpan=5;
+      const g=GROUPS.find(x=>x.id===sym.grp);gtc.textContent=g?g.label:'';gl.appendChild(gtc);tb.appendChild(gl);lastG=sym.grp;
+    }
+    const tr=document.createElement('tr');
+    const td0=document.createElement('td');td0.className='sym-cell';
+    let h=`<div class="sym-name">${sym.name}</div>`;
+    if(sym.hint)h+=`<div class="sym-hint">${sym.hint}</div>`;
+    if(sym.tag)h+=`<span class="sym-tag">${sym.tag}</span>`;
+    td0.innerHTML=h;tr.appendChild(td0);
+    PHASES.forEach((ph,pi)=>{
+      const td=document.createElement('td');td.className='ph-cell';td.style.background=ph.bg;
+      const v=sev[sym.id+':'+pi];const sc=SS[v];const fq=freq[sym.id+':'+pi];
+      const fo=FREQ_OPTS.find(o=>o.id===fq)||FREQ_OPTS[0];
+      td.innerHTML=`<div class="sev-dot" style="background:${sc.bg};border-color:${sc.bo};color:${sc.tx}">${v===0?'–':v}</div>
+        <div class="freq-bar-wrap"><div class="freq-bar" style="width:${fo.pct}%;background:${fo.clr}"></div></div>`;
+      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+      td.addEventListener('contextmenu',(e)=>{e.preventDefault();e.stopPropagation();if(v>0)openFreqPop(sym.id,pi,td);});
+      td.onmouseenter=()=>showTip(sym.id,td);
+      td.onmouseleave=()=>hideTip();
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  updateProg();
+}
+
+function updateProg(){
+  const done=Object.values(sev).filter(v=>v>0).length;
+  document.getElementById('prog').style.width=Math.round(done/(SYMS.length*4)*100)+'%';
+}
+
+// ─── Mobile card matrix ─────────────────────────────────────────────────────
+const mobPhaseSel={}; // symId -> phase index currently shown
+function renderMobileMatrix(){
+  const wrap=document.getElementById('mobile-mat');wrap.innerHTML='';
+  let lastG='';
+  SYMS.forEach(sym=>{
+    if(sym.grp!==lastG){
+      const g=GROUPS.find(x=>x.id===sym.grp);
+      const gl=document.createElement('div');gl.className='sec-lbl';gl.style.marginTop='10px';gl.textContent=g?g.label:'';
+      wrap.appendChild(gl);lastG=sym.grp;
+    }
+    const pi=mobPhaseSel[sym.id]??0;
+    const card=document.createElement('div');card.className='mob-card';
+    let h=`<div class="sym-name">${sym.name}</div>`;
+    if(sym.hint)h+=`<div class="sym-hint">${sym.hint}</div>`;
+    card.innerHTML=h;
+
+    const phaseSel=document.createElement('div');phaseSel.className='mob-phase-sel';
+    PHASES.forEach((ph,i)=>{
+      const b=document.createElement('button');b.className='mob-phase-btn'+(i===pi?' on':'');
+      b.style.cssText=`background:${ph.bg};color:${ph.tx}`;b.textContent=ph.sub;
+      b.onclick=()=>{mobPhaseSel[sym.id]=i;renderMobileMatrix();};
+      phaseSel.appendChild(b);
+    });
+    card.appendChild(phaseSel);
+
+    const sevRow=document.createElement('div');sevRow.className='mob-sev-row';
+    const v=sev[sym.id+':'+pi];
+    for(let s=0;s<=5;s++){
+      const sc=SS[s];const b=document.createElement('button');b.className='mob-sev-btn'+(v===s?' sel':'');
+      b.style.cssText=`background:${sc.bg};border-color:${sc.bo};color:${sc.tx}`;b.textContent=s===0?'–':s;
+      b.onclick=()=>{sev[sym.id+':'+pi]=s;if(s===0)freq[sym.id+':'+pi]=null;renderMobileMatrix();renderMatrix();updateProg();if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+      sevRow.appendChild(b);
+    }
+    card.appendChild(sevRow);
+
+    if(v>0){
+      const freqRow=document.createElement('div');freqRow.className='mob-freq-row';
+      FREQ_OPTS.filter(o=>o.id).forEach(o=>{
+        const cur=freq[sym.id+':'+pi];const b=document.createElement('button');b.className='mob-freq-btn'+(cur===o.id?' sel':'');
+        b.textContent=o.l;b.onclick=()=>{freq[sym.id+':'+pi]=cur===o.id?null:o.id;renderMobileMatrix();renderMatrix();if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+        freqRow.appendChild(b);
+      });
+      card.appendChild(freqRow);
+    }
+    wrap.appendChild(card);
+  });
+}
+const mobileQuery=window.matchMedia?window.matchMedia('(max-width:640px)'):{matches:false};
+let resizeT=null;
+window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(()=>{if(mobileQuery.matches)renderMobileMatrix();},150);});
+
+// ─── Tab switching ──────────────────────────────────────────────────────────
+function showTab(name){
+  document.querySelectorAll('.shell > div[id^="tab-"]').forEach(el=>el.style.display='none');
+  document.getElementById('tab-'+name).style.display='';
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.getAttribute('onclick')==="showTab('"+name+"')"));
+  if(name==='summary')renderSummary();
+  closePop();svTip.classList.remove('vis');
+}
+
+// ─── Detail tab builder ─────────────────────────────────────────────────────
+const detailAns={};
+function qid(tabId,title,text){return tabId+'|'+title+'|'+text;}
+function sec(title,rows,tabId){
+  const d=document.createElement('div');d.className='section';
+  const lbl=document.createElement('div');lbl.className='sec-lbl';lbl.textContent=title;d.appendChild(lbl);
+  rows.forEach(r=>{
+    const id=qid(tabId,title,r[0]);
+    const row=document.createElement('div');row.className='q-row';
+    const left=document.createElement('div');left.innerHTML=`<div class="q-text">${r[0]}</div>${r[1]?`<div class="q-sub">${r[1]}</div>`:''}`;
+    row.appendChild(left);
+    const right=document.createElement('div');right.className=r[2]==='chips'?'chips':'radios';
+    if(r[2]==='chips'){
+      const set=new Set();detailAns[id]=set;
+      r[3].forEach(o=>{const b=document.createElement('button');b.className='chip';b.textContent=o;
+        b.onclick=()=>{b.classList.toggle('on');set.has(o)?set.delete(o):set.add(o);};right.appendChild(b);});
+    }else{
+      detailAns[id]=null;
+      r[3].forEach(o=>{const b=document.createElement('button');b.className='radio';b.textContent=o;
+        b.onclick=()=>{right.querySelectorAll('.radio').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');detailAns[id]=o;};right.appendChild(b);});
+    }
+    row.appendChild(right);d.appendChild(row);
+  });
+  return d;
+}
+function buildDetailTabs(){
+  // Vestibular
+  const dv=document.getElementById('tab-d-vest');
+  dv.appendChild(sec('General',[
+    ['I use a walking aid or hold onto walls when unsteady',null,'radios',['Never','Sometimes','Often','Always']],
+    ['Moving images or busy visual environments make my symptoms worse',null,'radios',['Never','Sometimes','Often','Always']],
+    ['My unsteadiness is worse in the dark or on uneven ground',null,'radios',['Never','Sometimes','Often','Always']],
+    ['A doctor has mentioned PPPD or persistent dizziness to me',null,'radios',['Yes','No','Unsure']],
+  ],'vest'));
+  // Tinnitus
+  const dt=document.getElementById('tab-d-tinnitus');
+  dt.appendChild(sec('Ringing / buzzing',[
+    ['The sound is like','tick all that apply','chips',['Ringing','High-pitched whine','Buzzing','Hissing','Cicada / cricket','Low hum','Other']],
+    ['Which ear',null,'radios',['Right ear','Left ear','Both ears','Inside my head','Varies']],
+    ['The ear it\'s in changes between attacks',null,'radios',['Never','Sometimes','Often','Always']],
+    ['It\'s on the same side as my head pain',null,'radios',['Never','Sometimes','Often','Always / no headache']],
+    ['I use changes in my ringing as a warning an attack is coming',null,'radios',['Never','Sometimes','Often','Always']],
+    ['Tinnitus has been assessed using a validated questionnaire (THI or TFI)',null,'radios',['Yes','No','Not offered']],
+  ],'tinnitus'));
+  dt.appendChild(sec('Whooshing / pulsing',[
+    ['The whooshing beats in time with my heartbeat',null,'radios',['Never','Sometimes','Often','Always']],
+    ['It comes on when I move my head or change position',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I have had a vascular cause investigated (e.g. MRI, blood pressure monitoring)',null,'radios',['Yes','No','In progress']],
+  ],'tinnitus'));
+  // Pressure
+  const dp=document.getElementById('tab-d-pressure');
+  dp.appendChild(sec('What it feels like',[
+    ['It feels like','tick all that apply','chips',['Blocked / plugged','Pressure','Tightness','Heaviness','Fluid feeling','Release or popping']],
+    ['It spreads into my jaw, temple, or top of my head',null,'radios',['Never','Sometimes','Often','Always']],
+    ['It is painful rather than just uncomfortable or heavy',null,'radios',['Never','Sometimes','Often','Always']],
+    ['Flying, lifts, or altitude changes make it worse',null,'radios',['Never','Sometimes','Often','Always']],
+    ['Humid or crowded spaces make it worse',null,'radios',['Never','Sometimes','Often','Always']],
+  ],'pressure'));
+  dp.appendChild(sec('Diagnostic history',[
+    ['I was investigated for Ménière\'s disease or ETD before my VM diagnosis',null,'radios',['Yes','No','Unsure']],
+    ['I still partly feel the pressure is an ear problem rather than VM',null,'radios',['Agree','Partly agree','Disagree']],
+    ['I have had a hearing test that showed low-frequency hearing loss',null,'radios',['Yes','No','Not tested']],
+  ],'pressure'));
+  // Sound sensitivity
+  const ds=document.getElementById('tab-d-sound');
+  ds.appendChild(document.createElement('div')).className='note'; // placeholder — reuse note
+  const n=ds.firstChild;n.className='note';n.textContent='Three different types of sound difficulty with different treatments — you may have more than one.';
+  ds.appendChild(sec('1 · Everyday sounds feel too loud or painful',[
+    ['Difficult environments','tick all that apply','chips',['Restaurants / cafés','Open-plan offices','Multi-person meetings','Vehicles','TV or music','Crowded public spaces','Phone / video calls']],
+    ['This only happens during bad patches — I am fine when well',null,'radios',['Yes — mainly during attacks','Both during and between attacks','Mainly between attacks']],
+    ['I use soft background sound to feel less overwhelmed (not to block noise)',null,'radios',['Never','Sometimes','Often','Always']],
+  ],'sound'));
+  ds.appendChild(sec('2 · Any sound unbearable during a bad spell',[
+    ['During my worst spells, any sound at all is intolerable',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I need complete silence or a dark room during a bad spell',null,'radios',['Never','Sometimes','Often','Always']],
+  ],'sound'));
+  ds.appendChild(sec('3 · Specific sounds trigger instant strong emotions',[
+    ['Certain sounds trigger immediate anger or disgust regardless of how loud they are',null,'radios',['Never','Sometimes','Often','Always']],
+    ['This also happens when I am feeling well between attacks',null,'radios',['No — only near attacks','Yes — also between attacks','Yes — all the time']],
+  ],'sound'));
+  ds.appendChild(sec('Hearing assessment',[
+    ['I have had a formal hearing test in the last 2 years',null,'radios',['Yes — results available','Yes — not available','No']],
+    ['Very quiet sounds are hard to hear but slightly louder sounds are immediately painful',null,'radios',['Never','Sometimes','Often','Always']],
+  ],'sound'));
+  // Ear pain
+  const dpa=document.getElementById('tab-d-pain');
+  dpa.appendChild(sec('Ear pain or discomfort',[
+    ['The pain feels like','tick all that apply','chips',['Sharp or stabbing','Dull ache','Burning','Pressure-like','Jaw or face pain','Neck pain spreading to the ear']],
+    ['Where I feel it','tick all that apply','chips',['Inside the ear canal','Behind or around the ear','Jaw or cheek','Temple','Neck']],
+    ['The pain and the pressure blur into each other and I cannot clearly separate them',null,'radios',['Agree','Partly agree','Disagree']],
+    ['A doctor investigated my ear or jaw for this pain before my VM diagnosis',null,'radios',['Yes','No','Unsure']],
+  ],'pain'));
+  // Visual
+  const dvis=document.getElementById('tab-d-visual');
+  dvis.appendChild(sec('Visual aura',[
+    ['What it looks like','tick all that apply','chips',['Zigzag arc or crescent','Blind spot or dark patch','Shimmering or sparkles','Tunnel vision','Distorted shapes','Flashing lights']],
+    ['It builds up gradually over 5–20 minutes then fades',null,'radios',['Never','Sometimes','Often','Always']],
+    ['It is present in both eyes — still there if I cover one eye',null,'radios',['Yes','No','Not sure']],
+  ],'visual'));
+  dvis.appendChild(sec('Persistent visual symptoms',[
+    ['I see constant static or visual snow over everything',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I see afterimages or trails behind moving objects',null,'radios',['Never','Sometimes','Often','Always']],
+    ['These visual symptoms persist between attacks when I feel well',null,'radios',['No — only during attacks','Yes — also between attacks','Yes — continuously']],
+  ],'visual'));
+  dvis.appendChild(sec('Triggers for visual symptoms',[
+    ['Environments that trigger or worsen my symptoms','tick all that apply','chips',['Scrolling screens','Supermarkets or large shops','Heavy traffic or road travel','Busy patterned floors or walls','Moving crowds','Fluorescent or flickering lights','Cinema or streaming video']],
+  ],'visual'));
+  // Headache
+  const dh=document.getElementById('tab-d-head');
+  dh.appendChild(sec('Head pain character',[
+    ['My head pain is','tick all that apply','chips',['One-sided','Both sides','Throbbing or pulsing','Constant pressure or tightness','Behind one eye','At the back of my head','Across the top of my head']],
+    ['Head movement or going up stairs makes the pain noticeably worse',null,'radios',['Never','Sometimes','Often','Always']],
+    ['The head pain starts before the dizziness',null,'radios',['Never','Sometimes','Often','Always']],
+    ['The head pain comes on during or after the dizziness',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I sometimes get light sensitivity or nausea without any head pain',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I do not typically get head pain with my VM episodes',null,'radios',['Agree — I rarely have headache','Partly agree — occasional mild head pain','Disagree — head pain is a regular feature']],
+  ],'head'));
+  dh.appendChild(sec('Treatment history',[
+    ['Medications that have helped my head pain','tick all that apply','chips',['Paracetamol / acetaminophen','Ibuprofen or naproxen','Aspirin','Triptan (e.g. sumatriptan)','Anti-nausea medication','Prescription preventive medication','None tried yet']],
+    ['I have a formal migraine or VM diagnosis from a neurologist or specialist',null,'radios',['Yes','No — GP diagnosis only','No — self-identified','No diagnosis yet']],
+  ],'head'));
+  // Cognitive & mood
+  const dc=document.getElementById('tab-d-cog');
+  dc.appendChild(sec('Brain fog',[
+    ['What happens','tick all that apply','chips',['Difficulty finding words','Slowed thinking','Cannot follow complex conversations','Memory lapses','Poor concentration','Difficulty making decisions','Mental exhaustion after mild effort']],
+    ['The cognitive fog lasts longer than the dizziness — I am still mentally slow after the spinning stops',null,'radios',['Never','Sometimes — fog lasts longer','Often — fog is more disabling than vertigo','Always']],
+  ],'cog'));
+  dc.appendChild(sec('Anxiety and mood',[
+    ['My symptoms cause me significant anxiety or worry',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I feel anxious about being in places where an attack might happen',null,'radios',['Never','Sometimes','Often','Always']],
+    ['My symptoms have caused low mood or depression',null,'radios',['Never','Sometimes','Often','Always']],
+    ['I have spoken to a doctor or mental health professional about anxiety or depression related to my condition',null,'radios',['Yes','No','Planning to']],
+  ],'cog'));
+  // Body & autonomic
+  const db=document.getElementById('tab-d-body');
+  db.appendChild(sec('Neck pain and stiffness',[
+    ['Location','tick all that apply','chips',['Base of skull','Back of neck','One side of neck','Both sides of neck','Shoulders']],
+    ['Neck pain is one of my first reliable warning signs before an attack',null,'radios',['Never','Sometimes','Often — it reliably precedes attacks','Always']],
+  ],'body'));
+  db.appendChild(sec('Smell sensitivity',[
+    ['Strong smells that trigger or worsen my symptoms','tick all that apply','chips',['Perfume or cologne','Cigarette smoke','Petrol or diesel','Cleaning products','Strong food smells','Paint or chemicals','Other strong odours']],
+    ['Smells can actually start an attack rather than just making an existing one worse',null,'radios',['Never','Sometimes','Often','Always']],
+  ],'body'));
+  db.appendChild(sec('Skin and scalp tenderness during attacks',[
+    ['My scalp or skin becomes painful to touch — a pillow, glasses, or earrings feel uncomfortable',null,'radios',['Never','Sometimes during bad attacks','Often during attacks','Always during attacks']],
+    ['I treat my head pain as early as possible because medication seems to stop working if I delay',null,'radios',['Never noticed','Sometimes — works better if early','Often — clearly better if I treat within 20 minutes','Always — I always treat immediately']],
+  ],'body'));
+  db.appendChild(sec('Other automatic body responses',[
+    ['Things that happen during or around attacks','tick all that apply','chips',['Sweating or feeling clammy','Going pale','Fast or pounding heartbeat','Dry mouth','Runny or blocked nose','Loose stools or diarrhoea','Urgent need to urinate','Feeling faint or nearly fainting']],
+  ],'body'));
+}
+
+// ─── Triggers tab ──────────────────────────────────────────────────────────
+const TRIGGERS={
+  'Sleep & fatigue':['Poor or disrupted sleep','Sleeping too much','Shift work or jet lag','Extreme physical fatigue'],
+  'Stress & emotion':['High stress or pressure','Emotional upset or shock','Letdown after a period of stress (weekend / holiday)','Anxiety'],
+  'Dietary & hydration':['Skipping meals or fasting','Dehydration','Caffeine (too much or withdrawal)','Alcohol — red wine','Alcohol — beer or spirits','Monosodium glutamate (MSG)','Aged cheese','Processed or cured meats','Chocolate','Citrus fruits','Artificial sweeteners'],
+  'Hormonal':['Menstrual cycle — days before period','Menstrual cycle — during period','Hormonal contraception','Perimenopause or menopause','Pregnancy or postpartum'],
+  'Sensory environment':['Bright or glaring light','Flickering or fluorescent light','Loud noise or sudden sounds','Strong smells or perfume','Visually busy environments (supermarkets, traffic)','Scrolling screens or video content','Extreme heat or cold'],
+  'Physical':['Intense or unusual physical exercise','Neck or shoulder muscle tension','Head or neck movement','Bending down or sudden position change','Pressure changes — flying, altitude, diving'],
+  'Weather & environment':['Barometric pressure changes (storms, altitude)','High humidity','Extreme heat','Bright sunshine or glare'],
+  'Medications & substances':['Overuse of pain relief (rebound headache)','Starting or stopping a new medication','Recreational substances'],
+};
+
+function buildTriggers(){
+  const c=document.getElementById('trg-content');c.innerHTML='';
+  Object.entries(TRIGGERS).forEach(([grp,opts])=>{
+    const d=document.createElement('div');d.className='trg-group';
+    const lbl=document.createElement('div');lbl.className='trg-group-lbl';lbl.textContent=grp;d.appendChild(lbl);
+    const chips=document.createElement('div');chips.className='chips';chips.style.gap='4px';
+    opts.forEach(o=>{
+      const b=document.createElement('button');b.className='chip'+(trgSel.has(o)?' on':'');b.textContent=o;
+      b.style.marginBottom='3px';
+      b.onclick=()=>{b.classList.toggle('on');trgSel.has(o)?trgSel.delete(o):trgSel.add(o);};
+      chips.appendChild(b);
+    });
+    d.appendChild(chips);c.appendChild(d);
+  });
+}
+
+// ─── Clinical flags ─────────────────────────────────────────────────────────
+function computeFlags(){
+  const flags=[];
+  function chk(id,pi){return sev[id+':'+pi];}
+  if(chk('tin',0)>=2||chk('whoosh',0)>=2||chk('pres',0)>=2) flags.push({t:'warning',m:'Prominent warning-period aural symptoms — prospective episode diary recommended'});
+  if(chk('whoosh',3)>=3) flags.push({t:'danger',m:'Persistent between-spell pulsatile / whooshing tinnitus — screen for vascular cause; pulsatile tinnitus workup indicated'});
+  if(chk('pres',1)>=3||chk('block',1)>=3) flags.push({t:'warning',m:'Severe ear pressure / blockage during spells — screen for Ménière\'s disease overlap; audiometry and caloric testing recommended'});
+  if(chk('tin',3)>=3) flags.push({t:'danger',m:'Persistent between-spell tinnitus at severity 3+ — THI / TFI assessment recommended (VM is the strongest predictor of tinnitus handicap: Li & Liu 2024, OR 19.41)'});
+  if(chk('snd',3)>=3) flags.push({t:'danger',m:'Significant between-spell sound sensitivity — formal audiological evaluation indicated (loudness discomfort levels, speech-in-noise, pure-tone audiometry)'});
+  if(chk('phono',1)>=3&&chk('snd',3)>=2) flags.push({t:'warning',m:'Both spell-specific and between-spell sound sensitivity present — differentiate phonophobia from hyperacusis-like central sensitisation before selecting management'});
+  if(chk('miso',3)>=2) flags.push({t:'warning',m:'Persistent misophonia-like aversion between spells — consider CBT / psychological referral independent of VM management'});
+  if(chk('recruit',1)>=2||chk('recruit',3)>=2) flags.push({t:'warning',m:'Possible loudness recruitment pattern — formal audiological testing required to confirm cochlear vs central origin'});
+  if(chk('pain',1)>=2||chk('pain',0)>=2) flags.push({t:'warning',m:'Ear pain during or before spells — consider trigeminal referral, TMJ assessment, and ETD vs VM differential'});
+  if(chk('unstable',3)>=3) flags.push({t:'danger',m:'Significant between-spell unsteadiness — consider PPPD overlap; vestibular rehabilitation and SSRI / SNRI may be indicated alongside VM management'});
+  if(PHASES.some((_,i)=>chk('vertigo',i)>=4)&&PHASES.some((_,i)=>chk('pres',i)>=3)) flags.push({t:'danger',m:'High-severity spinning + significant ear pressure — Ménière\'s disease / VM overlap must be formally evaluated'});
+  if(chk('motion',3)>=3) flags.push({t:'warning',m:'Severe between-spell visual-motion sensitivity — consider PPPD overlap and vestibular rehabilitation; visually-induced dizziness is a distinct treatment target'});
+  if(chk('snow',3)>=2||chk('trail',3)>=2) flags.push({t:'warning',m:'Persistent between-spell visual snow or palinopsia — consider visual snow syndrome; neuro-ophthalmology referral may be warranted'});
+  if(chk('aura',1)>=4||chk('aura',0)>=4) flags.push({t:'danger',m:'Severe or prolonged visual aura — if new or atypical, exclude TIA / posterior circulation cause urgently'});
+  if(durSel.ict==='gt24') flags.push({t:'danger',m:'Spells lasting > 24 hours — consider prolonged VM; exclude TIA / central cause if this is a new pattern'});
+  if(durSel.inter==='ong') flags.push({t:'danger',m:'Symptoms continuous between spells — likely chronic VM or central sensitisation; comprehensive vestibular and audiological evaluation indicated'});
+  if(durSel.inter==='days') flags.push({t:'warning',m:'Between-spell gap less than one week — clustered attack pattern; consider preventive therapy review'});
+  if(durSel.pre==='2d') flags.push({t:'warning',m:'Long warning period (1–2 days) — document symptom sequence; prophylaxis may reduce warning-period burden'});
+  if(chk('allodynia',1)>=2) flags.push({t:'warning',m:'Scalp / skin tenderness during spells — treat head pain early (within 20 min of onset); triptans become less effective once allodynia is established'});
+  if(chk('neck',0)>=2) flags.push({t:'warning',m:'Neck pain as a warning-period symptom — may allow early acute treatment before the spell fully establishes'});
+  if(chk('smell',0)>=2) flags.push({t:'warning',m:'Smell sensitivity as a warning sign — avoiding known triggers and premonitory symptom diary recommended'});
+  if(chk('fog',2)>=3) flags.push({t:'warning',m:'Prolonged recovery-period cognitive fog — patient and employer / institution education recommended; graded return to cognitive tasks may be needed'});
+  if(chk('anxiety',3)>=3) flags.push({t:'danger',m:'Significant between-spell anticipatory anxiety — CBT for vestibular disorders or specialist psychological referral indicated; anxiety maintains and amplifies vestibular symptoms'});
+  if(chk('mood',3)>=3) flags.push({t:'danger',m:'Significant between-spell low mood or depression — formal mental health assessment recommended; depression is an independent prognostic factor in VM'});
+  if(chk('auto',1)>=3) flags.push({t:'warning',m:'Prominent autonomic involvement during spells — consider dysautonomia workup; significant autonomic features may influence management'});
+  return flags;
+}
+
+// ─── Summary ────────────────────────────────────────────────────────────────
+function renderSummary(){
+  const filled=SYMS.filter(s=>PHASES.some((p,i)=>sev[s.id+':'+i]>0));
+  const wrap=document.getElementById('sum-mat');
+  if(!filled.length){wrap.innerHTML='<div class="empty-st">No symptoms rated yet.</div>';return;}
+  let h=`<div style="display:grid;grid-template-columns:150px repeat(4,1fr);gap:2px;font-size:10px;margin-bottom:5px">`;
+  h+=`<div></div>`;
+  PHASES.forEach((ph,i)=>{const d=durSel[ph.id];const opt=d?ph.dur.find(o=>o.id===d):null;
+    h+=`<div style="padding:2px 3px;text-align:center;border-radius:4px;background:${ph.bg};color:${ph.tx};font-weight:600"><div>${ph.name}</div><div style="font-size:9px;font-weight:400;opacity:.8">${ph.sub}</div>${opt?`<div style="font-size:9px;opacity:.75">${opt.l}</div>`:''}</div>`;});
+  let lg='';
+  filled.forEach(sym=>{
+    if(sym.grp!==lg){const g=GROUPS.find(x=>x.id===sym.grp);h+=`<div style="grid-column:1/-1;padding:2px 5px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);background:var(--surface-1);margin-top:3px">${g?g.label:''}</div>`;lg=sym.grp;}
+    h+=`<div style="padding:2px 5px;color:var(--text-primary);font-size:10px;display:flex;align-items:center">${sym.name}</div>`;
+    PHASES.forEach((ph,i)=>{
+      const v=sev[sym.id+':'+i];const fq=freq[sym.id+':'+i];const fo=FREQ_OPTS.find(o=>o.id===fq);
+      if(!v){h+=`<div style="padding:2px;text-align:center;border-radius:3px;background:var(--surface-1);color:var(--text-muted)">–</div>`;return;}
+      h+=`<div style="padding:2px 1px;text-align:center;border-radius:3px;background:${ph.bg};color:${ph.tx};font-weight:600;font-size:10px">`;
+      h+=`<div>${v}</div>`;
+      if(fo)h+=`<div style="font-size:9px;opacity:.8">${fo.pct}%</div>`;
+      h+=`</div>`;
+    });
+  });
+  h+=`</div>`;wrap.innerHTML=h;
+
+  const tot=PHASES.map((_,i)=>SYMS.reduce((s,sym)=>s+sev[sym.id+':'+i],0));
+  const max=Math.max(...tot);
+  const dom=document.getElementById('sum-dom');
+  if(!max){dom.textContent='No symptoms rated yet';}
+  else{dom.innerHTML=tot.map((v,i)=>v===max?`<span style="padding:2px 7px;border-radius:10px;background:${PHASES[i].bg};color:${PHASES[i].tx};font-size:10px;margin-right:3px">${PHASES[i].name} (${PHASES[i].sub})</span>`:'').join('');}
+
+  const flags=computeFlags();
+  document.getElementById('sum-flags').innerHTML=flags.length
+    ?flags.map(f=>`<div class="sum-flag" style="background:var(--bg-${f.t});color:var(--text-${f.t})">${f.m}</div>`).join('')
+    :'<div class="empty-st">No clinical flags triggered with current ratings.</div>';
+
+  const trgs=[...trgSel];
+  document.getElementById('sum-trg').innerHTML=trgs.length
+    ?trgs.map(t=>`<span style="display:inline-block;padding:2px 7px;background:var(--surface-2);border:.5px solid var(--border);border-radius:12px;font-size:10px;margin:2px">${t}</span>`).join('')
+    :'<span style="font-size:11px;color:var(--text-muted);font-style:italic">No triggers selected — visit the Triggers tab</span>';
+}
+
+// ─── Report / export ────────────────────────────────────────────────────────
+function buildReport(){
+  const filled=SYMS.filter(s=>PHASES.some((_,i)=>sev[s.id+':'+i]>0));
+  const tot=PHASES.map((_,i)=>SYMS.reduce((s,sym)=>s+sev[sym.id+':'+i],0));
+  const flags=computeFlags();
+  let msg='VM-ASQ v2 profile\n'+'='.repeat(30)+'\n\nPhase durations:\n';
+  PHASES.forEach((ph,i)=>{const d=durSel[ph.id];const opt=d?ph.dur.find(o=>o.id===d):null;msg+=`  ${ph.name} (${ph.sub}): ${opt?opt.l+' ('+opt.n+')':'not set'}\n`;});
+  msg+='\nSymptom severity · frequency by phase:\n';
+  GROUPS.forEach(g=>{const gs=filled.filter(s=>s.grp===g.id);if(!gs.length)return;msg+=`\n${g.label}:\n`;
+    gs.forEach(sym=>{const parts=PHASES.map((ph,i)=>{const v=sev[sym.id+':'+i];if(!v)return null;const fo=FREQ_OPTS.find(o=>o.id===freq[sym.id+':'+i]);return `${ph.name}:${v}(${SL[v].toLowerCase()})${fo&&fo.id?'@'+fo.pct+'%':''}`;}).filter(Boolean);msg+=`  ${sym.name}: ${parts.join(' | ')}\n`;});});
+  msg+=`\nPhase totals — ${PHASES.map((ph,i)=>ph.name+':'+tot[i]).join(' | ')}\n`;
+  if(trgSel.size)msg+=`\nTriggers: ${[...trgSel].join(', ')}\n`;
+  const answeredDetail=Object.entries(detailAns).filter(([,v])=>v instanceof Set?v.size>0:v);
+  if(answeredDetail.length){
+    msg+='\nDetail question responses:\n';
+    answeredDetail.forEach(([id,v])=>{const [,title,text]=id.split('|');msg+=`  [${title}] ${text}: ${v instanceof Set?[...v].join(', '):v}\n`;});
+  }
+  if(flags.length){msg+='\nClinical flags:\n';flags.forEach(f=>msg+=`  - (${f.t}) ${f.m}\n`);}
+  msg+='\nThis report was generated by a patient self-report tool and does not constitute a diagnosis.';
+  return msg;
+}
+
+function buildJSON(){
+  const symData={};
+  SYMS.forEach(sym=>{PHASES.forEach((ph,i)=>{const v=sev[sym.id+':'+i];if(v)symData[sym.id+':'+ph.id]={severity:v,frequency:freq[sym.id+':'+i]};});});
+  const durations={};PHASES.forEach(ph=>durations[ph.id]=durSel[ph.id]);
+  const detail={};Object.entries(detailAns).forEach(([id,v])=>{if(v instanceof Set){if(v.size)detail[id]=[...v];}else if(v)detail[id]=v;});
+  return {version:'VM-ASQ-2',generatedAt:new Date().toISOString(),durations,symptoms:symData,triggers:[...trgSel],detail,flags:computeFlags()};
+}
+
+function triggerDownload(filename,content,mime){
+  const blob=new Blob([content],{type:mime});const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+  document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+function downloadReport(){triggerDownload('vm-asq-clinician-summary.txt',buildReport(),'text/plain');}
+function downloadJSON(){triggerDownload('vm-asq-responses.json',JSON.stringify(buildJSON(),null,2),'application/json');}
+
+// Integration seam for institutions wiring their own database (Google Sheets
+// Apps Script webhook, REDCap import API, etc). Not called anywhere yet.
+function submitProfile(payload){
+  // TODO: POST payload to an institution-configured endpoint
+}
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+PHASES.forEach((_,i)=>buildHdr(i));
+renderMatrix();
+renderMobileMatrix();
+buildDetailTabs();
+buildTriggers();
+document.addEventListener('click',()=>{closePop();});
+</script>
+</body>
+</html>
