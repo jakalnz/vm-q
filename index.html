@@ -27,13 +27,16 @@
 body{font-family:var(--font-sans);color:var(--text-primary);background:transparent;font-size:13px}
 
 /* Layout */
-.shell{padding:.75rem 0}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:.9rem;flex-wrap:wrap;position:sticky;top:0;background:var(--surface-1);z-index:50;padding-top:.5rem}
+:root{--nav-h:64px}
+.shell{padding:.75rem 0;padding-top:calc(var(--nav-h) + .75rem)}
+.app-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--surface-1);border-bottom:1px solid var(--border);min-height:var(--nav-h)}
+.app-title{font-size:12px;font-weight:700;padding:7px 10px 2px;color:var(--text-primary)}
+.app-subtitle{display:block;font-size:10px;font-weight:400;color:var(--text-muted);margin-top:1px}
+.tabs{display:flex;gap:2px;flex-wrap:wrap;padding:0 6px 2px}
 .tab{padding:5px 10px;font-size:11px;cursor:pointer;border:none;background:transparent;color:var(--text-secondary);border-bottom:2px solid transparent;white-space:nowrap}
 .tab.active{color:var(--text-accent);border-bottom-color:var(--fill-accent);font-weight:600}
-.back-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-accent);cursor:pointer;background:transparent;border:none;padding:2px 0;margin-bottom:.6rem}
-.back-btn:hover{text-decoration:underline}
 .tab:hover:not(.active){color:var(--text-primary)}
+.tab-select{display:none}
 .note{font-size:11px;color:var(--text-muted);padding:5px 10px;background:var(--surface-1);border-left:2px solid var(--border-strong);border-radius:0 var(--radius) var(--radius) 0;margin-bottom:.75rem;line-height:1.5}
 .prog-bar{height:3px;background:var(--border);border-radius:2px;margin-bottom:.75rem;overflow:hidden}
 .prog-fill{height:100%;background:var(--fill-accent);border-radius:2px;transition:width .3s}
@@ -150,6 +153,9 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 @media(max-width:640px){
   #mat-wrap{display:none !important}
   #mobile-mat{display:block !important}
+  :root{--nav-h:76px}
+  .tabs{display:none}
+  .tab-select{display:block;width:calc(100% - 12px);margin:2px 6px 6px;padding:5px 7px;font-size:12px;border-radius:var(--radius);border:.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary)}
 }
 </style>
 </head>
@@ -161,21 +167,13 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
   <div id="tt-rows"></div>
 </div>
 
-<div class="shell">
-<div class="tabs" id="tab-bar">
-  <button class="tab active" onclick="showTab('overview')">Overview</button>
-  <button class="tab" onclick="showTab('d-vest')">Vestibular</button>
-  <button class="tab" onclick="showTab('d-tinnitus')">Ear sounds</button>
-  <button class="tab" onclick="showTab('d-pressure')">Ear pressure</button>
-  <button class="tab" onclick="showTab('d-sound')">Sound sensitivity</button>
-  <button class="tab" onclick="showTab('d-pain')">Ear pain</button>
-  <button class="tab" onclick="showTab('d-visual')">Visual</button>
-  <button class="tab" onclick="showTab('d-head')">Headache</button>
-  <button class="tab" onclick="showTab('d-cog')">Cognitive & mood</button>
-  <button class="tab" onclick="showTab('d-body')">Body & autonomic</button>
-  <button class="tab" onclick="showTab('triggers')">Triggers</button>
-  <button class="tab" onclick="showTab('summary')">Summary ↗</button>
+<div class="app-nav" id="app-nav">
+  <div class="app-title">VM Symptom &amp; Trigger Questionnaire<span class="app-subtitle">Vestibular migraine self-report tool</span></div>
+  <div class="tabs" id="tab-bar"></div>
+  <select class="tab-select" id="tab-select"></select>
 </div>
+
+<div class="shell">
 
 <!-- OVERVIEW TAB -->
 <div id="tab-overview">
@@ -646,16 +644,12 @@ window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout((
 // ─── Tab switching ──────────────────────────────────────────────────────────
 function showTab(name){
   document.querySelectorAll('.shell > div[id^="tab-"]').forEach(el=>el.style.display='none');
-  const el=document.getElementById('tab-'+name);el.style.display='';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.getAttribute('onclick')==="showTab('"+name+"')"));
-  if(name!=='overview'&&!el.querySelector(':scope > .back-btn')){
-    const b=document.createElement('button');b.className='back-btn';b.innerHTML='← Back to overview';
-    b.onclick=()=>{showTab('overview');window.scrollTo({top:0,behavior:'smooth'});};
-    el.insertBefore(b,el.firstChild);
-  }
+  document.getElementById('tab-'+name).style.display='';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  const sel=document.getElementById('tab-select');if(sel)sel.value=name;
   if(name==='summary')renderSummary();
   closePop();svTip.classList.remove('vis');
-  window.scrollTo({top:0,behavior:'instant'});
+  window.scrollTo(0,0);
 }
 
 // ─── Detail tab builder ─────────────────────────────────────────────────────
@@ -955,7 +949,34 @@ function submitProfile(payload){
   // TODO: POST payload to an institution-configured endpoint
 }
 
+// ─── Nav (tab bar + mobile select) ─────────────────────────────────────────
+const TAB_LIST=[
+  {id:'overview',   label:'Overview'},
+  {id:'d-vest',     label:'Vestibular'},
+  {id:'d-tinnitus', label:'Ear sounds'},
+  {id:'d-pressure', label:'Ear pressure'},
+  {id:'d-sound',    label:'Sound sensitivity'},
+  {id:'d-pain',     label:'Ear pain'},
+  {id:'d-visual',   label:'Visual'},
+  {id:'d-head',     label:'Headache'},
+  {id:'d-cog',      label:'Cognitive & mood'},
+  {id:'d-body',     label:'Body & autonomic'},
+  {id:'triggers',   label:'Triggers'},
+  {id:'summary',    label:'Summary ↗'},
+];
+function buildNav(){
+  const bar=document.getElementById('tab-bar');bar.innerHTML='';
+  const sel=document.getElementById('tab-select');sel.innerHTML='';
+  TAB_LIST.forEach((t,i)=>{
+    const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.dataset.tab=t.id;b.textContent=t.label;
+    b.onclick=()=>showTab(t.id);bar.appendChild(b);
+    const o=document.createElement('option');o.value=t.id;o.textContent=t.label;sel.appendChild(o);
+  });
+  sel.onchange=()=>showTab(sel.value);
+}
+
 // ─── Init ──────────────────────────────────────────────────────────────────
+buildNav();
 PHASES.forEach((_,i)=>buildHdr(i));
 renderMatrix();
 renderMobileMatrix();
