@@ -4,29 +4,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --text-primary:#1a1a1a;--text-secondary:#555;--text-muted:#888;--text-accent:#2563eb;
-  --border:#e0e0e0;--border-strong:#bbb;
-  --surface-1:#f8f8f8;--surface-2:#f0f0f0;
+  --font-sans:'Inter', -apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --text-primary:#2d2a26;--text-secondary:#5c564f;--text-muted:#8b837a;--text-accent:#2563eb;
+  --border:#e8e6e2;--border-strong:#cac5bd;
+  --surface-1:#faf8f5;--surface-2:#f3f0ea;
   --bg-accent:#eff6ff;--fill-accent:#2563eb;
   --bg-warning:#fff7ed;--text-warning:#9a3412;
   --bg-danger:#fef2f2;--text-danger:#991b1b;
   --bar-bg:#e3e1de;--bar-tx:#4a4642;
-  --radius:6px;
+  --radius:8px;
 }
 @media(prefers-color-scheme:dark){:root{
-  --text-primary:#e8e8e8;--text-secondary:#aaa;--text-muted:#666;--text-accent:#60a5fa;
-  --border:#333;--border-strong:#555;
-  --surface-1:#1e1e1e;--surface-2:#2a2a2a;
+  --text-primary:#e6e2dd;--text-secondary:#aba49c;--text-muted:#7a736a;--text-accent:#60a5fa;
+  --border:#2c2927;--border-strong:#44403c;
+  --surface-1:#161514;--surface-2:#232120;
   --bg-accent:#1e3a5f;--fill-accent:#60a5fa;
   --bg-warning:#2d1800;--text-warning:#fb923c;
   --bg-danger:#2d0a0a;--text-danger:#f87171;
   --bar-bg:#3a3733;--bar-tx:#d8d4cf;
 }}
-body{font-family:var(--font-sans);color:var(--text-primary);background:transparent;font-size:13px}
+body{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-1);font-size:13px;line-height:1.4}
 
 /* Layout */
 :root{--nav-h:64px}
@@ -86,6 +89,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 /* Popovers */
 .popover{position:absolute;z-index:200;background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:7px;min-width:175px;top:calc(100% + 3px);left:50%;transform:translateX(-50%)}
 .popover::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:var(--surface-2);border-left:.5px solid var(--border-strong);border-top:.5px solid var(--border-strong)}
+.cell-popover{min-width:190px !important;width:190px !important;padding:8px 10px !important}
 .pop-title{font-size:10px;font-weight:500;color:var(--text-secondary);margin-bottom:4px;text-align:center}
 .pop-opt{width:100%;padding:3px 7px;font-size:11px;border-radius:5px;cursor:pointer;border:.5px solid var(--border);background:transparent;color:var(--text-primary);text-align:left;display:flex;justify-content:space-between;gap:5px;margin-bottom:2px}
 .pop-opt:hover{background:var(--surface-1)}
@@ -93,9 +97,7 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 .pop-note{font-size:9px;opacity:.7}
 .pop-close{display:block;margin-top:4px;font-size:10px;color:var(--text-muted);text-align:center;cursor:pointer}
 
-/* Frequency mini-popover */
-.freq-pop{position:absolute;z-index:201;background:var(--surface-2);border:.5px solid var(--border-strong);border-radius:var(--radius);padding:6px;min-width:150px;top:calc(100% + 3px);left:50%;transform:translateX(-50%)}
-.freq-pop::before{content:'';position:absolute;top:-5px;left:50%;transform:translateX(-50%) rotate(45deg);width:8px;height:8px;background:var(--surface-2);border-left:.5px solid var(--border-strong);border-top:.5px solid var(--border-strong)}
+/* Frequency options within popovers */
 .freq-opt{width:100%;padding:3px 7px;font-size:11px;border-radius:5px;cursor:pointer;border:.5px solid var(--border);background:transparent;color:var(--text-primary);text-align:left;display:flex;justify-content:space-between;gap:5px;margin-bottom:2px}
 .freq-opt:hover{background:var(--surface-1)}
 .freq-opt.sel{border-color:var(--fill-accent);background:var(--bg-accent);color:var(--text-accent)}
@@ -123,6 +125,64 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 .leg-i{display:flex;align-items:center;gap:3px;font-size:10px;color:var(--text-secondary)}
 .leg-d{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;border:1px solid transparent;flex-shrink:0}
 
+/* Details layout */
+.details-layout {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+.details-sidebar {
+  width: 190px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar-item {
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.sidebar-item:hover {
+  background: var(--border-strong)33;
+  color: var(--text-primary);
+}
+.sidebar-item.active {
+  background: var(--bg-accent);
+  color: var(--text-accent);
+  border-color: var(--fill-accent)44;
+  font-weight: 600;
+}
+.sidebar-item-badge {
+  font-size: 9px;
+  background: var(--border);
+  padding: 1px 5px;
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.sidebar-item.active .sidebar-item-badge {
+  background: var(--fill-accent);
+  color: #fff;
+}
+.sidebar-item.completed .sidebar-item-badge {
+  background: #10b981;
+  color: #fff;
+}
+.details-content {
+  flex-grow: 1;
+  min-width: 0;
+}
+
 /* Detail tabs */
 .section{margin-bottom:1rem}
 .sec-lbl{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.35rem}
@@ -146,6 +206,107 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 .send-btn:hover{background:var(--surface-1)}
 .empty-st{font-size:11px;color:var(--text-muted);font-style:italic}
 
+/* Summary burden charts */
+.burden-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface-1);
+  padding: 12px;
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+}
+.burden-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.burden-label-box {
+  width: 130px;
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.burden-label-main {
+  font-weight: 600;
+  display: block;
+}
+.burden-label-sub {
+  font-size: 9px;
+  opacity: 0.7;
+}
+.burden-track {
+  flex-grow: 1;
+  height: 10px;
+  background: var(--surface-2);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+  border: 0.5px solid var(--border);
+}
+.burden-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.4s ease-out;
+}
+.burden-value {
+  width: 50px;
+  text-align: right;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+  }
+  .app-nav, .note, .send-btn, .tabs, .tab-select, .details-sidebar {
+    display: none !important;
+  }
+  .shell {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #tab-summary {
+    display: block !important;
+  }
+  .shell > div:not(#tab-summary) {
+    display: none !important;
+  }
+  .details-layout {
+    display: block !important;
+  }
+  .section {
+    page-break-inside: avoid;
+    margin-bottom: 1.5rem !important;
+  }
+  .sec-lbl {
+    border-bottom: 1.5px solid #000000 !important;
+    padding-bottom: 2px !important;
+    color: #000000 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+  }
+  .burden-chart {
+    background: #ffffff !important;
+    border: 1px solid #cccccc !important;
+    padding: 8px !important;
+  }
+  .burden-track {
+    background: #eeeeee !important;
+    border: 0.5px solid #aaaaaa !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
 /* Mobile card matrix */
 .mob-card{background:var(--surface-1);border-radius:var(--radius);padding:8px 10px;margin-bottom:8px}
 .mob-card .sym-name{font-size:12px}
@@ -163,8 +324,11 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
   #mobile-mat{display:block !important}
   :root{--nav-h:76px}
   .tabs{display:none}
-  .tab-select{display:block;width:calc(100% - 12px);margin:2px 6px 6px;padding:5px 7px;font-size:12px;border-radius:var(--radius);border:.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary)}
+  .tab-select{display:block;width:calc(100% - 12px);margin:2px 6px 6px;padding:6px 10px;font-size:12px;border-radius:var(--radius);border:1px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b837a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:12px;padding-right:28px}
+  .details-sidebar{display:none !important}
+  .details-layout{display:block;margin-top:0}
 }
+
 </style>
 </head>
 <body>
@@ -222,16 +386,21 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
   <div id="mobile-mat" style="display:none"></div>
 </div>
 
-<!-- DETAIL TABS (populated by JS) -->
-<div id="tab-d-vest"     style="display:none"></div>
-<div id="tab-d-tinnitus" style="display:none"></div>
-<div id="tab-d-pressure" style="display:none"></div>
-<div id="tab-d-sound"    style="display:none"></div>
-<div id="tab-d-pain"     style="display:none"></div>
-<div id="tab-d-visual"   style="display:none"></div>
-<div id="tab-d-head"     style="display:none"></div>
-<div id="tab-d-cog"      style="display:none"></div>
-<div id="tab-d-body"     style="display:none"></div>
+<!-- DETAILS LAYOUT CONTAINER -->
+<div id="details-layout" class="details-layout" style="display:none">
+  <div class="details-sidebar" id="details-sidebar"></div>
+  <div class="details-content" id="details-content">
+    <div id="tab-d-vest"     style="display:none"></div>
+    <div id="tab-d-tinnitus" style="display:none"></div>
+    <div id="tab-d-pressure" style="display:none"></div>
+    <div id="tab-d-sound"    style="display:none"></div>
+    <div id="tab-d-pain"     style="display:none"></div>
+    <div id="tab-d-visual"   style="display:none"></div>
+    <div id="tab-d-head"     style="display:none"></div>
+    <div id="tab-d-cog"      style="display:none"></div>
+    <div id="tab-d-body"     style="display:none"></div>
+  </div>
+</div>
 
 <!-- TRIGGERS TAB -->
 <div id="tab-triggers" style="display:none">
@@ -241,13 +410,17 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 
 <!-- SUMMARY TAB -->
 <div id="tab-summary" style="display:none">
+  <div class="section"><div class="sec-lbl">Symptom Burden by Phase</div><div id="sum-charts"></div></div>
   <div class="section"><div class="sec-lbl">Episode timeline — severity · frequency</div><div id="sum-mat"></div></div>
   <div class="section"><div class="sec-lbl">Dominant phase by total symptom burden</div><div id="sum-dom" style="font-size:11px;padding:6px 9px;background:var(--surface-1);border-radius:var(--radius)">—</div></div>
   <div class="section"><div class="sec-lbl">Clinical flags</div><div id="sum-flags"></div></div>
   <div class="section"><div class="sec-lbl">Triggers selected</div><div id="sum-trg" style="font-size:11px;padding:6px 9px;background:var(--surface-1);border-radius:var(--radius)">None selected</div></div>
   <div class="note">This questionnaire does not transmit data anywhere on its own. Use the buttons below to save your results — bring the clinician summary to your appointment, or keep the JSON file if you're asked to share anonymised data with a research database.</div>
+  <button class="send-btn" onclick="window.print()">Print / Save PDF of clinician summary ⎙</button>
   <button class="send-btn" onclick="downloadReport()">Download clinician summary (text) ↓</button>
   <button class="send-btn" onclick="downloadJSON()">Download responses (JSON) ↓</button>
+  <button class="send-btn" onclick="document.getElementById('json-import-input').click()">Import responses (JSON) ↑</button>
+  <input type="file" id="json-import-input" accept="application/json,.json" style="display:none" onchange="importJSON(event)">
 </div>
 </div><!-- end shell -->
 
@@ -547,16 +720,82 @@ function openDurPop(pi,el){
   setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
 }
 
-// ─── Frequency popover ─────────────────────────────────────────────────────
-function openFreqPop(symId,pi,td){
-  closePop();const pop=document.createElement('div');pop.className='freq-pop';
-  const t=document.createElement('div');t.className='pop-title';t.textContent='How often does this occur?';pop.appendChild(t);
-  const cur=freq[symId+':'+pi];
-  FREQ_OPTS.forEach(o=>{
-    const b=document.createElement('button');b.className='freq-opt'+(cur===o.id?' sel':'');
-    b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.pct?o.pct+'%':''}</span>`;
-    b.onclick=(e)=>{e.stopPropagation();freq[symId+':'+pi]=cur===o.id?null:o.id;closePop();renderMatrix();renderMobileMatrix();renderSummary();};pop.appendChild(b);});
-  const c=document.createElement('span');c.className='pop-close';c.textContent='close';c.onclick=(e)=>{e.stopPropagation();closePop();};pop.appendChild(c);
+// ─── Cell popover (Unified Severity + Frequency) ──────────────────────────
+function openCellPopover(symId,pi,td){
+  closePop();
+  const sym=SYMS.find(s=>s.id===symId);
+  const ph=PHASES[pi];
+  const pop=document.createElement('div');
+  pop.className='popover cell-popover';
+  
+  const t=document.createElement('div');
+  t.className='pop-title';
+  t.innerHTML=`<strong>${sym.name}</strong><br><span style="opacity:.85;font-size:9px">${ph.name}</span>`;
+  pop.appendChild(t);
+  
+  const curSev=sev[sym.id+':'+pi];
+  const curFreq=freq[sym.id+':'+pi];
+  
+  // Severity Selection
+  const sLabel=document.createElement('div');
+  sLabel.style.cssText='font-size:10px;font-weight:600;margin:6px 0 4px;text-align:left;color:var(--text-secondary)';
+  sLabel.textContent='Severity:';
+  pop.appendChild(sLabel);
+  
+  const sRow=document.createElement('div');
+  sRow.style.cssText='display:flex;gap:3px;justify-content:space-between;margin-bottom:6px';
+  for(let s=0;s<=5;s++){
+    const sc=SS[s];const b=document.createElement('button');
+    b.style.cssText=`width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;cursor:pointer;border:1.5px solid ${sc.bo || 'var(--border)'};background:${sc.bg || 'transparent'};color:${sc.tx || 'var(--text-secondary)'};transition:all .1s`;
+    if(curSev===s){
+      b.style.transform='scale(1.15)';
+      b.style.boxShadow='0 0 0 1.5px var(--fill-accent)';
+    }
+    b.textContent=s===0?'–':s;
+    b.onclick=(e)=>{
+      e.stopPropagation();
+      sev[sym.id+':'+pi]=s;
+      if(s===0){
+        freq[sym.id+':'+pi]=null;
+        closePop();
+      }else{
+        grpExpanded[sym.grp]=true;
+        openCellPopover(symId,pi,td); // Re-open to refresh view with frequency options
+      }
+      renderMatrix();renderMobileMatrix();updateProg();renderSummary();
+    };
+    sRow.appendChild(b);
+  }
+  pop.appendChild(sRow);
+  
+  // Frequency Selection (only shown if severity > 0)
+  if(curSev>0){
+    const fLabel=document.createElement('div');
+    fLabel.style.cssText='font-size:10px;font-weight:600;margin:6px 0 4px;text-align:left;color:var(--text-secondary)';
+    fLabel.textContent='Frequency:';
+    pop.appendChild(fLabel);
+    
+    const fGrid=document.createElement('div');
+    fGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:4px';
+    FREQ_OPTS.filter(o=>o.id).forEach(o=>{
+      const b=document.createElement('button');b.className='freq-opt'+(curFreq===o.id?' sel':'');
+      b.style.cssText='padding:4px;font-size:10px;text-align:center;justify-content:center;margin-bottom:0';
+      b.innerHTML=`<span>${o.l}</span><span style="font-size:8px;opacity:.7"> ${o.pct}%</span>`;
+      b.onclick=(e)=>{
+        e.stopPropagation();
+        freq[sym.id+':'+pi]=curFreq===o.id?null:o.id;
+        closePop();
+        renderMatrix();renderMobileMatrix();renderSummary();
+      };
+      fGrid.appendChild(b);
+    });
+    pop.appendChild(fGrid);
+  }
+  
+  const c=document.createElement('span');c.className='pop-close';c.textContent='close';
+  c.onclick=(e)=>{e.stopPropagation();closePop();};
+  pop.appendChild(c);
+  
   td.appendChild(pop);openPop=pop;
   setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
 }
@@ -565,6 +804,7 @@ function openFreqPop(symId,pi,td){
 const svTip=document.getElementById('sev-tip');
 let hideT=null;
 function showTip(symId,cellEl){
+  if(openPop)return; // Don't show tooltip if popover is open
   clearTimeout(hideT);const sym=SYMS.find(s=>s.id===symId);if(!sym)return;
   document.getElementById('tt-name').textContent=sym.name;
   const rows=document.getElementById('tt-rows');rows.innerHTML='';
@@ -605,8 +845,7 @@ function renderMatrix(){
       const fo=FREQ_OPTS.find(o=>o.id===fq)||FREQ_OPTS[0];
       td.innerHTML=`<div class="sev-dot" style="background:${sc.bg};border-color:${sc.bo};color:${sc.tx}">${v===0?'–':v}</div>
         <div class="freq-bar-wrap"><div class="freq-bar" style="width:${fo.pct}%;background:${fo.clr}"></div></div>`;
-      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;else grpExpanded[sym.grp]=true;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);renderSummary();};
-      td.addEventListener('contextmenu',(e)=>{e.preventDefault();e.stopPropagation();if(v>0)openFreqPop(sym.id,pi,td);});
+      td.onclick=(e)=>{e.stopPropagation();openCellPopover(sym.id,pi,td);};
       td.onmouseenter=()=>showTip(sym.id,td);
       td.onmouseleave=()=>hideTip();
       tr.appendChild(td);
@@ -675,9 +914,28 @@ window.addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout((
 
 // ─── Tab switching ──────────────────────────────────────────────────────────
 function showTab(name){
-  document.querySelectorAll('.shell > div[id^="tab-"]').forEach(el=>el.style.display='none');
-  document.getElementById('tab-'+name).style.display='';
-  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  const isDetail = name.startsWith('d-');
+  
+  // Hide all main tab divs and the details layout
+  document.querySelectorAll('.shell > div[id^="tab-"], #details-layout').forEach(el=>el.style.display='none');
+  
+  if(isDetail){
+    document.getElementById('details-layout').style.display='flex';
+    document.querySelectorAll('#details-content > div[id^="tab-d-"]').forEach(el=>el.style.display='none');
+    document.getElementById('tab-'+name).style.display='';
+    
+    // Highlight sidebar item
+    document.querySelectorAll('.sidebar-item').forEach(si=>{
+      si.classList.toggle('active', si.dataset.tab === name);
+    });
+    
+    // Highlight main "details" tab
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab==='details'));
+  } else {
+    document.getElementById('tab-'+name).style.display='';
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  }
+  
   const sel=document.getElementById('tab-select');if(sel)sel.value=name;
   if(name==='summary')renderSummary();
   closePop();svTip.classList.remove('vis');
@@ -697,12 +955,16 @@ function sec(title,rows,tabId){
     row.appendChild(left);
     const right=document.createElement('div');right.className=r[2]==='chips'?'chips':'radios';
     if(r[2]==='chips'){
-      const set=new Set();detailAns[id]=set;
-      r[3].forEach(o=>{const b=document.createElement('button');b.className='chip';b.textContent=o;
+      const set=detailAns[id] || new Set();
+      detailAns[id]=set;
+      r[3].forEach(o=>{const b=document.createElement('button');b.className='chip' + (set.has(o) ? ' on' : '');b.textContent=o;
         b.onclick=()=>{b.classList.toggle('on');set.has(o)?set.delete(o):set.add(o);renderSummary();};right.appendChild(b);});
     }else{
-      detailAns[id]=null;
-      r[3].forEach(o=>{const b=document.createElement('button');b.className='radio';b.textContent=o;
+      if (detailAns[id] === undefined || detailAns[id] === null) {
+        detailAns[id]=null;
+      }
+      const curVal=detailAns[id];
+      r[3].forEach(o=>{const b=document.createElement('button');b.className='radio' + (curVal===o ? ' sel' : '');b.textContent=o;
         b.onclick=()=>{right.querySelectorAll('.radio').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');detailAns[id]=o;renderSummary();};right.appendChild(b);});
     }
     row.appendChild(right);d.appendChild(row);
@@ -710,6 +972,16 @@ function sec(title,rows,tabId){
   return d;
 }
 function buildDetailTabs(){
+  document.getElementById('tab-d-vest').innerHTML = '';
+  document.getElementById('tab-d-tinnitus').innerHTML = '';
+  document.getElementById('tab-d-pressure').innerHTML = '';
+  document.getElementById('tab-d-sound').innerHTML = '';
+  document.getElementById('tab-d-pain').innerHTML = '';
+  document.getElementById('tab-d-visual').innerHTML = '';
+  document.getElementById('tab-d-head').innerHTML = '';
+  document.getElementById('tab-d-cog').innerHTML = '';
+  document.getElementById('tab-d-body').innerHTML = '';
+
   // Vestibular
   const dv=document.getElementById('tab-d-vest');
   dv.appendChild(sec('General',[
@@ -899,6 +1171,36 @@ function computeFlags(){
 // ─── Summary ────────────────────────────────────────────────────────────────
 function renderSummary(){
   const filled=SYMS.filter(s=>PHASES.some((p,i)=>sev[s.id+':'+i]>0));
+  const tot=PHASES.map((_,i)=>SYMS.reduce((s,sym)=>s+sev[sym.id+':'+i],0));
+  const max=Math.max(...tot);
+  
+  // Render phase burden charts
+  const chartsWrap = document.getElementById('sum-charts');
+  if(!max){
+    chartsWrap.innerHTML='<div class="empty-st">No symptoms rated yet.</div>';
+  }else{
+    const maxBurden = max || 1;
+    let ch = '<div class="burden-chart">';
+    PHASES.forEach((ph, i) => {
+      const val = tot[i];
+      const relativePct = Math.round((val / maxBurden) * 100);
+      ch += `
+        <div class="burden-row">
+          <div class="burden-label-box">
+            <span class="burden-label-main" style="color:${ph.tx}">${ph.name}</span>
+            <span class="burden-label-sub">${ph.sub}</span>
+          </div>
+          <div class="burden-track">
+            <div class="burden-fill" style="width: ${relativePct}%; background: ${ph.tx}"></div>
+          </div>
+          <div class="burden-value">${val} pts</div>
+        </div>
+      `;
+    });
+    ch += '</div>';
+    chartsWrap.innerHTML = ch;
+  }
+
   const wrap=document.getElementById('sum-mat');
   if(!filled.length){
     wrap.innerHTML='<div class="empty-st">No symptoms rated yet.</div>';
@@ -923,8 +1225,6 @@ function renderSummary(){
     h+=`</div>`;wrap.innerHTML=h;
   }
 
-  const tot=PHASES.map((_,i)=>SYMS.reduce((s,sym)=>s+sev[sym.id+':'+i],0));
-  const max=Math.max(...tot);
   const dom=document.getElementById('sum-dom');
   if(!max){dom.textContent='No symptoms rated yet';}
   else{dom.innerHTML=tot.map((v,i)=>v===max?`<span style="padding:2px 7px;border-radius:10px;background:${PHASES[i].bg};color:${PHASES[i].tx};font-size:10px;margin-right:3px">${PHASES[i].name} (${PHASES[i].sub})</span>`:'').join('');}
@@ -938,6 +1238,7 @@ function renderSummary(){
   document.getElementById('sum-trg').innerHTML=trgs.length
     ?trgs.map(t=>`<span style="display:inline-block;padding:2px 7px;background:var(--surface-2);border:.5px solid var(--border);border-radius:12px;font-size:10px;margin:2px">${t}</span>`).join('')
     :'<span style="font-size:11px;color:var(--text-muted);font-style:italic">No triggers selected — visit the Triggers tab</span>';
+  updateProgressBadges();
 }
 
 // ─── Report / export ────────────────────────────────────────────────────────
@@ -978,6 +1279,58 @@ function triggerDownload(filename,content,mime){
 function downloadReport(){triggerDownload('vm-asq-clinician-summary.txt',buildReport(),'text/plain');}
 function downloadJSON(){triggerDownload('vm-asq-responses.json',JSON.stringify(buildJSON(),null,2),'application/json');}
 
+function importJSON(event){
+  const file=event.target.files[0];
+  event.target.value='';
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    let data;
+    try{data=JSON.parse(reader.result);}catch(e){alert('Could not read that file — it is not valid JSON.');return;}
+    if(!data||typeof data!=='object'||!data.symptoms||!data.durations){alert('That file doesn\'t look like a VM-ASQ responses export.');return;}
+    applyImportedData(data);
+  };
+  reader.readAsText(file);
+}
+
+function applyImportedData(data){
+  Object.keys(sev).forEach(k=>delete sev[k]);
+  Object.keys(freq).forEach(k=>delete freq[k]);
+  Object.keys(detailAns).forEach(k=>delete detailAns[k]);
+  trgSel.clear();
+
+  PHASES.forEach(ph=>{durSel[ph.id]=data.durations[ph.id]||null;});
+
+  Object.entries(data.symptoms||{}).forEach(([key,v])=>{
+    sev[key]=v.severity;
+    freq[key]=v.frequency;
+  });
+
+  Object.keys(sev).forEach(key=>{
+    if(!sev[key])return;
+    const symId=key.split(':')[0];
+    const sym=SYMS.find(s=>s.id===symId);
+    if(sym)grpExpanded[sym.grp]=true;
+  });
+
+  (data.triggers||[]).forEach(t=>trgSel.add(t));
+
+  Object.entries(data.detail||{}).forEach(([id,v])=>{
+    detailAns[id]=Array.isArray(v)?new Set(v):v;
+  });
+
+  PHASES.forEach((_,i)=>buildHdr(i));
+  renderMatrix();
+  renderMobileMatrix();
+  buildDetailTabs();
+  buildTriggers();
+  updateProg();
+  updateProgressBadges();
+  renderSummary();
+  showTab('summary');
+  alert('Responses imported.');
+}
+
 // Integration seam for institutions wiring their own database (Google Sheets
 // Apps Script webhook, REDCap import API, etc). Not called anywhere yet.
 function submitProfile(payload){
@@ -985,38 +1338,152 @@ function submitProfile(payload){
 }
 
 // ─── Nav (tab bar + mobile select) ─────────────────────────────────────────
-const TAB_LIST=[
+const MAIN_TABS = [
   {id:'overview',   label:'Overview'},
-  {id:'d-vest',     label:'Vestibular'},
-  {id:'d-tinnitus', label:'Ear sounds'},
-  {id:'d-pressure', label:'Ear pressure'},
-  {id:'d-sound',    label:'Sound sensitivity'},
-  {id:'d-pain',     label:'Ear pain'},
-  {id:'d-visual',   label:'Visual'},
-  {id:'d-head',     label:'Headache'},
-  {id:'d-cog',      label:'Cognitive & mood'},
-  {id:'d-body',     label:'Body & autonomic'},
+  {id:'details',    label:'Detailed Questions'},
   {id:'triggers',   label:'Triggers'},
   {id:'summary',    label:'Summary ↗'},
 ];
+
+const DETAIL_TABS = [
+  {id:'d-vest',     label:'Vestibular', prefix:'vest'},
+  {id:'d-tinnitus', label:'Ear sounds', prefix:'tinnitus'},
+  {id:'d-pressure', label:'Ear pressure', prefix:'pressure'},
+  {id:'d-sound',    label:'Sound sensitivity', prefix:'sound'},
+  {id:'d-pain',     label:'Ear pain', prefix:'pain'},
+  {id:'d-visual',   label:'Visual', prefix:'visual'},
+  {id:'d-head',     label:'Headache', prefix:'head'},
+  {id:'d-cog',      label:'Cognitive & mood', prefix:'cog'},
+  {id:'d-body',     label:'Body & autonomic', prefix:'body'},
+];
+
+function buildSidebar(){
+  const sidebar = document.getElementById('details-sidebar');
+  sidebar.innerHTML = '';
+  DETAIL_TABS.forEach(t=>{
+    const item = document.createElement('div');
+    item.className = 'sidebar-item';
+    item.dataset.tab = t.id;
+    item.innerHTML = `<span>${t.label}</span><span class="sidebar-item-badge" id="badge-${t.id}">0/0</span>`;
+    item.onclick = () => showTab(t.id);
+    sidebar.appendChild(item);
+  });
+}
+
+function getTabProgress(prefix){
+  const keys = Object.keys(detailAns).filter(k => k.startsWith(prefix + '|'));
+  if (!keys.length) return { answered: 0, total: 0 };
+  let answered = 0;
+  keys.forEach(k => {
+    const val = detailAns[k];
+    if (val instanceof Set) {
+      if (val.size > 0) answered++;
+    } else if (val !== null && val !== undefined) {
+      answered++;
+    }
+  });
+  return { answered, total: keys.length };
+}
+
+function updateProgressBadges(){
+  let totalAnswered = 0;
+  let totalQuestions = 0;
+  
+  DETAIL_TABS.forEach(t=>{
+    const prog = getTabProgress(t.prefix);
+    const badge = document.getElementById(`badge-${t.id}`);
+    if (badge) {
+      badge.textContent = `${prog.answered}/${prog.total}`;
+      const item = badge.parentElement;
+      if (prog.answered === prog.total && prog.total > 0) {
+        item.classList.add('completed');
+      } else {
+        item.classList.remove('completed');
+      }
+    }
+    
+    // Update mobile select option text
+    const sel = document.getElementById('tab-select');
+    if (sel) {
+      const opt = sel.querySelector(`option[value="${t.id}"]`);
+      if (opt) {
+        opt.textContent = `${t.label} (${prog.answered}/${prog.total})`;
+      }
+    }
+    
+    totalAnswered += prog.answered;
+    totalQuestions += prog.total;
+  });
+  
+  // Update details main tab text on desktop
+  const mainDetailsTab = document.querySelector(`.tab[data-tab="details"]`);
+  if (mainDetailsTab) {
+    mainDetailsTab.textContent = `Detailed Questions (${totalAnswered}/${totalQuestions})`;
+  }
+}
+
 function buildNav(){
   const bar=document.getElementById('tab-bar');bar.innerHTML='';
-  const sel=document.getElementById('tab-select');sel.innerHTML='';
-  TAB_LIST.forEach((t,i)=>{
-    const b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.dataset.tab=t.id;b.textContent=t.label;
-    b.onclick=()=>showTab(t.id);bar.appendChild(b);
-    const o=document.createElement('option');o.value=t.id;o.textContent=t.label;sel.appendChild(o);
+  
+  // 1. Render main desktop tabs
+  MAIN_TABS.forEach((t, i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(i===0?' active':'');
+    b.dataset.tab=t.id;
+    b.textContent=t.label;
+    b.onclick=()=>{
+      if (t.id === 'details') {
+        showTab('d-vest');
+      } else {
+        showTab(t.id);
+      }
+    };
+    bar.appendChild(b);
   });
+  
+  // 2. Render mobile select dropdown with optgroups
+  const sel=document.getElementById('tab-select');sel.innerHTML='';
+  
+  const gCore = document.createElement('optgroup');
+  gCore.label = 'Core Survey';
+  
+  const oOverview = document.createElement('option');
+  oOverview.value = 'overview'; oOverview.textContent = 'Overview (Symptom Matrix)';
+  gCore.appendChild(oOverview);
+  
+  const oTriggers = document.createElement('option');
+  oTriggers.value = 'triggers'; oTriggers.textContent = 'Triggers';
+  gCore.appendChild(oTriggers);
+  
+  const oSummary = document.createElement('option');
+  oSummary.value = 'summary'; oSummary.textContent = 'Summary & Report';
+  gCore.appendChild(oSummary);
+  
+  sel.appendChild(gCore);
+  
+  const gDetails = document.createElement('optgroup');
+  gDetails.label = 'Detailed Follow-up Questions';
+  
+  DETAIL_TABS.forEach(t=>{
+    const o = document.createElement('option');
+    o.value = t.id;
+    o.textContent = t.label;
+    gDetails.appendChild(o);
+  });
+  sel.appendChild(gDetails);
+  
   sel.onchange=()=>showTab(sel.value);
 }
 
 // ─── Init ──────────────────────────────────────────────────────────────────
 buildNav();
+buildSidebar();
 PHASES.forEach((_,i)=>buildHdr(i));
 renderMatrix();
 renderMobileMatrix();
 buildDetailTabs();
 buildTriggers();
+updateProgressBadges();
 document.addEventListener('click',()=>{closePop();});
 </script>
 </body>
