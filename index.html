@@ -107,9 +107,14 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 .tip-text{font-size:10px;line-height:1.35}
 .tip-text b{font-weight:600;display:block}
 
-/* Group rows */
-.grp-div td{height:2px;background:var(--border);padding:0}
-.grp-lbl td{padding:2px 7px;background:var(--surface-1);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+/* Group accordion header */
+.grp-lbl td{padding:0;background:var(--text-primary);cursor:pointer;user-select:none}
+.grp-lbl-mob{background:var(--text-primary);cursor:pointer;user-select:none;border-radius:var(--radius);margin:10px 0 6px}
+.grp-lbl-inner{display:flex;align-items:center;padding:6px 8px;width:100%}
+.grp-chevron{color:var(--surface-1);font-size:9px;margin-right:6px;display:inline-block;width:8px}
+.grp-label-text{color:var(--surface-1);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.grp-badge{margin-left:auto;color:var(--surface-1);opacity:.75;font-size:9px;font-weight:500;padding-left:8px}
+.grp-badge.has-rated{opacity:1;color:var(--fill-accent)}
 
 /* Legend */
 .legend{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:.55rem}
@@ -485,7 +490,20 @@ const SYMS=[
 // ─── State ─────────────────────────────────────────────────────────────────
 const sev={},freq={},durSel={pre:null,ict:null,post:null,inter:null};
 const trgSel=new Set();
+const grpExpanded={};
 SYMS.forEach(s=>PHASES.forEach((p,i)=>{sev[s.id+':'+i]=0;freq[s.id+':'+i]=null;}));
+
+// ─── Category accordion ─────────────────────────────────────────────────────
+function groupStats(gid){
+  const syms=SYMS.filter(s=>s.grp===gid);
+  const rated=syms.filter(s=>PHASES.some((_,i)=>sev[s.id+':'+i]>0)).length;
+  return {rated,total:syms.length};
+}
+function toggleGroup(gid){grpExpanded[gid]=!grpExpanded[gid];renderMatrix();renderMobileMatrix();}
+function groupHeaderHTML(gid){
+  const g=GROUPS.find(x=>x.id===gid);const {rated,total}=groupStats(gid);const open=!!grpExpanded[gid];
+  return `<div class="grp-lbl-inner"><span class="grp-chevron">${open?'▾':'▸'}</span><span class="grp-label-text">${g?g.label:''}</span><span class="grp-badge${rated?' has-rated':''}">${rated}/${total} rated</span></div>`;
+}
 
 // ─── Open popover tracking ─────────────────────────────────────────────────
 let openPop=null;
@@ -558,11 +576,12 @@ function renderMatrix(){
   let lastG='';
   SYMS.forEach(sym=>{
     if(sym.grp!==lastG){
-      if(lastG!==''){const sp=document.createElement('tr');sp.className='grp-div';const stc=document.createElement('td');stc.colSpan=5;sp.appendChild(stc);tb.appendChild(sp);}
       const gl=document.createElement('tr');gl.className='grp-lbl';const gtc=document.createElement('td');gtc.colSpan=5;
-      const g=GROUPS.find(x=>x.id===sym.grp);gtc.textContent=g?g.label:'';gl.appendChild(gtc);tb.appendChild(gl);lastG=sym.grp;
+      gtc.innerHTML=groupHeaderHTML(sym.grp);gl.appendChild(gtc);
+      gl.onclick=()=>toggleGroup(sym.grp);tb.appendChild(gl);lastG=sym.grp;
     }
-    const tr=document.createElement('tr');
+    const open=!!grpExpanded[sym.grp];
+    const tr=document.createElement('tr');tr.style.display=open?'':'none';
     const td0=document.createElement('td');td0.className='sym-cell';
     let h=`<div class="sym-name">${sym.name}</div>`;
     if(sym.hint)h+=`<div class="sym-hint">${sym.hint}</div>`;
@@ -574,7 +593,7 @@ function renderMatrix(){
       const fo=FREQ_OPTS.find(o=>o.id===fq)||FREQ_OPTS[0];
       td.innerHTML=`<div class="sev-dot" style="background:${sc.bg};border-color:${sc.bo};color:${sc.tx}">${v===0?'–':v}</div>
         <div class="freq-bar-wrap"><div class="freq-bar" style="width:${fo.pct}%;background:${fo.clr}"></div></div>`;
-      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);renderSummary();};
+      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;else grpExpanded[sym.grp]=true;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);renderSummary();};
       td.addEventListener('contextmenu',(e)=>{e.preventDefault();e.stopPropagation();if(v>0)openFreqPop(sym.id,pi,td);});
       td.onmouseenter=()=>showTip(sym.id,td);
       td.onmouseleave=()=>hideTip();
@@ -597,10 +616,10 @@ function renderMobileMatrix(){
   let lastG='';
   SYMS.forEach(sym=>{
     if(sym.grp!==lastG){
-      const g=GROUPS.find(x=>x.id===sym.grp);
-      const gl=document.createElement('div');gl.className='sec-lbl';gl.style.marginTop='10px';gl.textContent=g?g.label:'';
-      wrap.appendChild(gl);lastG=sym.grp;
+      const gl=document.createElement('div');gl.className='grp-lbl grp-lbl-mob';gl.innerHTML=groupHeaderHTML(sym.grp);
+      gl.onclick=()=>toggleGroup(sym.grp);wrap.appendChild(gl);lastG=sym.grp;
     }
+    if(!grpExpanded[sym.grp])return;
     const pi=mobPhaseSel[sym.id]??0;
     const card=document.createElement('div');card.className='mob-card';
     let h=`<div class="sym-name">${sym.name}</div>`;
