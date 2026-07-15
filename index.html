@@ -14,6 +14,7 @@
   --bg-accent:#eff6ff;--fill-accent:#2563eb;
   --bg-warning:#fff7ed;--text-warning:#9a3412;
   --bg-danger:#fef2f2;--text-danger:#991b1b;
+  --bar-bg:#e3e1de;--bar-tx:#4a4642;
   --radius:6px;
 }
 @media(prefers-color-scheme:dark){:root{
@@ -23,6 +24,7 @@
   --bg-accent:#1e3a5f;--fill-accent:#60a5fa;
   --bg-warning:#2d1800;--text-warning:#fb923c;
   --bg-danger:#2d0a0a;--text-danger:#f87171;
+  --bar-bg:#3a3733;--bar-tx:#d8d4cf;
 }}
 body{font-family:var(--font-sans);color:var(--text-primary);background:transparent;font-size:13px}
 
@@ -108,13 +110,13 @@ body{font-family:var(--font-sans);color:var(--text-primary);background:transpare
 .tip-text b{font-weight:600;display:block}
 
 /* Group accordion header */
-.grp-lbl td{padding:0;background:var(--text-primary);cursor:pointer;user-select:none}
-.grp-lbl-mob{background:var(--text-primary);cursor:pointer;user-select:none;border-radius:var(--radius);margin:10px 0 6px}
+.grp-lbl td{padding:0;background:var(--bar-bg);cursor:pointer;user-select:none}
+.grp-lbl-mob{background:var(--bar-bg);cursor:pointer;user-select:none;border-radius:var(--radius);margin:10px 0 6px}
 .grp-lbl-inner{display:flex;align-items:center;padding:6px 8px;width:100%}
-.grp-chevron{color:var(--surface-1);font-size:9px;margin-right:6px;display:inline-block;width:8px}
-.grp-label-text{color:var(--surface-1);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.grp-badge{margin-left:auto;color:var(--surface-1);opacity:.75;font-size:9px;font-weight:500;padding-left:8px}
-.grp-badge.has-rated{opacity:1;color:var(--fill-accent)}
+.grp-chevron{color:var(--bar-tx);font-size:9px;margin-right:6px;display:inline-block;width:8px;opacity:.8}
+.grp-label-text{color:var(--bar-tx);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.grp-badge{margin-left:auto;color:var(--bar-tx);opacity:.7;font-size:9px;font-weight:500;padding-left:8px}
+.grp-badge.has-rated{opacity:1;color:var(--text-accent)}
 
 /* Legend */
 .legend{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:.55rem}
@@ -264,7 +266,7 @@ const PHASES=[
   {id:'inter',name:'Between spells', sub:'Inter-ictal', range:'Symptom-free gap: days to none',
    q:'How long is the symptom-free gap between spells, before symptoms return?',
    bg:'#EAF3DE',tx:'#3B6D11',
-   dur:[{id:'days',l:'Days',n:'clear for under a week between spells'},{id:'wks',l:'1–2 weeks',n:'clear for a week or two between spells'},{id:'mo',l:'~ 1 month',n:'clear for roughly a month between spells'},{id:'mos',l:'Months',n:'clear for several months between spells'},{id:'ong',l:'Continuous',n:'no symptom-free gap — something is always present, even mildly'}]},
+   dur:[{id:'ong',l:'Continuous',n:'no symptom-free gap — something is always present, even mildly'},{id:'days',l:'Days',n:'clear for under a week between spells'},{id:'wks',l:'1–2 weeks',n:'clear for a week or two between spells'},{id:'mo',l:'~ 1 month',n:'clear for roughly a month between spells'},{id:'mos',l:'Months',n:'clear for several months between spells'}]},
 ];
 
 const SS=[
