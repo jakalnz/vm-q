@@ -510,7 +510,7 @@ function openDurPop(pi,el){
   const cur=durSel[ph.id];
   ph.dur.forEach(o=>{const b=document.createElement('button');b.className='pop-opt'+(cur===o.id?' sel':'');
     b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.n}</span>`;
-    b.onclick=(e)=>{e.stopPropagation();durSel[ph.id]=cur===o.id?null:o.id;closePop();buildHdr(pi);};pop.appendChild(b);});
+    b.onclick=(e)=>{e.stopPropagation();durSel[ph.id]=cur===o.id?null:o.id;closePop();buildHdr(pi);renderSummary();};pop.appendChild(b);});
   const c=document.createElement('span');c.className='pop-close';c.textContent='close';c.onclick=(e)=>{e.stopPropagation();closePop();};pop.appendChild(c);
   el.style.position='relative';el.appendChild(pop);openPop=pop;
   setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
@@ -524,7 +524,7 @@ function openFreqPop(symId,pi,td){
   FREQ_OPTS.forEach(o=>{
     const b=document.createElement('button');b.className='freq-opt'+(cur===o.id?' sel':'');
     b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.pct?o.pct+'%':''}</span>`;
-    b.onclick=(e)=>{e.stopPropagation();freq[symId+':'+pi]=cur===o.id?null:o.id;closePop();renderMatrix();renderMobileMatrix();};pop.appendChild(b);});
+    b.onclick=(e)=>{e.stopPropagation();freq[symId+':'+pi]=cur===o.id?null:o.id;closePop();renderMatrix();renderMobileMatrix();renderSummary();};pop.appendChild(b);});
   const c=document.createElement('span');c.className='pop-close';c.textContent='close';c.onclick=(e)=>{e.stopPropagation();closePop();};pop.appendChild(c);
   td.style.position='relative';td.appendChild(pop);openPop=pop;
   setTimeout(()=>document.addEventListener('click',closePop,{once:true}),0);
@@ -573,7 +573,7 @@ function renderMatrix(){
       const fo=FREQ_OPTS.find(o=>o.id===fq)||FREQ_OPTS[0];
       td.innerHTML=`<div class="sev-dot" style="background:${sc.bg};border-color:${sc.bo};color:${sc.tx}">${v===0?'–':v}</div>
         <div class="freq-bar-wrap"><div class="freq-bar" style="width:${fo.pct}%;background:${fo.clr}"></div></div>`;
-      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+      td.onclick=(e)=>{e.stopPropagation();closePop();sev[sym.id+':'+pi]=(v+1)%6;if(sev[sym.id+':'+pi]===0)freq[sym.id+':'+pi]=null;renderMatrix();renderMobileMatrix();updateProg();showTip(sym.id,td);renderSummary();};
       td.addEventListener('contextmenu',(e)=>{e.preventDefault();e.stopPropagation();if(v>0)openFreqPop(sym.id,pi,td);});
       td.onmouseenter=()=>showTip(sym.id,td);
       td.onmouseleave=()=>hideTip();
@@ -620,7 +620,7 @@ function renderMobileMatrix(){
     for(let s=0;s<=5;s++){
       const sc=SS[s];const b=document.createElement('button');b.className='mob-sev-btn'+(v===s?' sel':'');
       b.style.cssText=`background:${sc.bg};border-color:${sc.bo};color:${sc.tx}`;b.textContent=s===0?'–':s;
-      b.onclick=()=>{sev[sym.id+':'+pi]=s;if(s===0)freq[sym.id+':'+pi]=null;renderMobileMatrix();renderMatrix();updateProg();if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+      b.onclick=()=>{sev[sym.id+':'+pi]=s;if(s===0)freq[sym.id+':'+pi]=null;renderMobileMatrix();renderMatrix();updateProg();renderSummary();};
       sevRow.appendChild(b);
     }
     card.appendChild(sevRow);
@@ -629,7 +629,7 @@ function renderMobileMatrix(){
       const freqRow=document.createElement('div');freqRow.className='mob-freq-row';
       FREQ_OPTS.filter(o=>o.id).forEach(o=>{
         const cur=freq[sym.id+':'+pi];const b=document.createElement('button');b.className='mob-freq-btn'+(cur===o.id?' sel':'');
-        b.textContent=o.l;b.onclick=()=>{freq[sym.id+':'+pi]=cur===o.id?null:o.id;renderMobileMatrix();renderMatrix();if(document.getElementById('tab-summary').style.display!=='none')renderSummary();};
+        b.textContent=o.l;b.onclick=()=>{freq[sym.id+':'+pi]=cur===o.id?null:o.id;renderMobileMatrix();renderMatrix();renderSummary();};
         freqRow.appendChild(b);
       });
       card.appendChild(freqRow);
@@ -667,11 +667,11 @@ function sec(title,rows,tabId){
     if(r[2]==='chips'){
       const set=new Set();detailAns[id]=set;
       r[3].forEach(o=>{const b=document.createElement('button');b.className='chip';b.textContent=o;
-        b.onclick=()=>{b.classList.toggle('on');set.has(o)?set.delete(o):set.add(o);};right.appendChild(b);});
+        b.onclick=()=>{b.classList.toggle('on');set.has(o)?set.delete(o):set.add(o);renderSummary();};right.appendChild(b);});
     }else{
       detailAns[id]=null;
       r[3].forEach(o=>{const b=document.createElement('button');b.className='radio';b.textContent=o;
-        b.onclick=()=>{right.querySelectorAll('.radio').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');detailAns[id]=o;};right.appendChild(b);});
+        b.onclick=()=>{right.querySelectorAll('.radio').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');detailAns[id]=o;renderSummary();};right.appendChild(b);});
     }
     row.appendChild(right);d.appendChild(row);
   });
@@ -825,7 +825,7 @@ function buildTriggers(){
     opts.forEach(o=>{
       const b=document.createElement('button');b.className='chip'+(trgSel.has(o)?' on':'');b.textContent=o;
       b.style.marginBottom='3px';
-      b.onclick=()=>{b.classList.toggle('on');trgSel.has(o)?trgSel.delete(o):trgSel.add(o);};
+      b.onclick=()=>{b.classList.toggle('on');trgSel.has(o)?trgSel.delete(o):trgSel.add(o);renderSummary();};
       chips.appendChild(b);
     });
     d.appendChild(chips);c.appendChild(d);
@@ -868,25 +868,28 @@ function computeFlags(){
 function renderSummary(){
   const filled=SYMS.filter(s=>PHASES.some((p,i)=>sev[s.id+':'+i]>0));
   const wrap=document.getElementById('sum-mat');
-  if(!filled.length){wrap.innerHTML='<div class="empty-st">No symptoms rated yet.</div>';return;}
-  let h=`<div style="display:grid;grid-template-columns:150px repeat(4,1fr);gap:2px;font-size:10px;margin-bottom:5px">`;
-  h+=`<div></div>`;
-  PHASES.forEach((ph,i)=>{const d=durSel[ph.id];const opt=d?ph.dur.find(o=>o.id===d):null;
-    h+=`<div style="padding:2px 3px;text-align:center;border-radius:4px;background:${ph.bg};color:${ph.tx};font-weight:600"><div>${ph.name}</div><div style="font-size:9px;font-weight:400;opacity:.8">${ph.sub}</div>${opt?`<div style="font-size:9px;opacity:.75">${opt.l}</div>`:''}</div>`;});
-  let lg='';
-  filled.forEach(sym=>{
-    if(sym.grp!==lg){const g=GROUPS.find(x=>x.id===sym.grp);h+=`<div style="grid-column:1/-1;padding:2px 5px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);background:var(--surface-1);margin-top:3px">${g?g.label:''}</div>`;lg=sym.grp;}
-    h+=`<div style="padding:2px 5px;color:var(--text-primary);font-size:10px;display:flex;align-items:center">${sym.name}</div>`;
-    PHASES.forEach((ph,i)=>{
-      const v=sev[sym.id+':'+i];const fq=freq[sym.id+':'+i];const fo=FREQ_OPTS.find(o=>o.id===fq);
-      if(!v){h+=`<div style="padding:2px;text-align:center;border-radius:3px;background:var(--surface-1);color:var(--text-muted)">–</div>`;return;}
-      h+=`<div style="padding:2px 1px;text-align:center;border-radius:3px;background:${ph.bg};color:${ph.tx};font-weight:600;font-size:10px">`;
-      h+=`<div>${v}</div>`;
-      if(fo)h+=`<div style="font-size:9px;opacity:.8">${fo.pct}%</div>`;
-      h+=`</div>`;
+  if(!filled.length){
+    wrap.innerHTML='<div class="empty-st">No symptoms rated yet.</div>';
+  }else{
+    let h=`<div style="display:grid;grid-template-columns:150px repeat(4,1fr);gap:2px;font-size:10px;margin-bottom:5px">`;
+    h+=`<div></div>`;
+    PHASES.forEach((ph,i)=>{const d=durSel[ph.id];const opt=d?ph.dur.find(o=>o.id===d):null;
+      h+=`<div style="padding:2px 3px;text-align:center;border-radius:4px;background:${ph.bg};color:${ph.tx};font-weight:600"><div>${ph.name}</div><div style="font-size:9px;font-weight:400;opacity:.8">${ph.sub}</div>${opt?`<div style="font-size:9px;opacity:.75">${opt.l}</div>`:''}</div>`;});
+    let lg='';
+    filled.forEach(sym=>{
+      if(sym.grp!==lg){const g=GROUPS.find(x=>x.id===sym.grp);h+=`<div style="grid-column:1/-1;padding:2px 5px;font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text-muted);background:var(--surface-1);margin-top:3px">${g?g.label:''}</div>`;lg=sym.grp;}
+      h+=`<div style="padding:2px 5px;color:var(--text-primary);font-size:10px;display:flex;align-items:center">${sym.name}</div>`;
+      PHASES.forEach((ph,i)=>{
+        const v=sev[sym.id+':'+i];const fq=freq[sym.id+':'+i];const fo=FREQ_OPTS.find(o=>o.id===fq);
+        if(!v){h+=`<div style="padding:2px;text-align:center;border-radius:3px;background:var(--surface-1);color:var(--text-muted)">–</div>`;return;}
+        h+=`<div style="padding:2px 1px;text-align:center;border-radius:3px;background:${ph.bg};color:${ph.tx};font-weight:600;font-size:10px">`;
+        h+=`<div>${v}</div>`;
+        if(fo)h+=`<div style="font-size:9px;opacity:.8">${fo.pct}%</div>`;
+        h+=`</div>`;
+      });
     });
-  });
-  h+=`</div>`;wrap.innerHTML=h;
+    h+=`</div>`;wrap.innerHTML=h;
+  }
 
   const tot=PHASES.map((_,i)=>SYMS.reduce((s,sym)=>s+sev[sym.id+':'+i],0));
   const max=Math.max(...tot);
