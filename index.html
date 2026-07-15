@@ -261,9 +261,10 @@ const PHASES=[
   {id:'post',name:'Recovery period', sub:'Post-ictal',  range:'Minutes to 2–3 days after',
    bg:'#E6F1FB',tx:'#0C447C',
    dur:[{id:'mins',l:'Minutes',n:'rapid'},{id:'hrs',l:'Hours',n:'same-day'},{id:'1d',l:'~1 day',n:'overnight'},{id:'2to3d',l:'2–3 days',n:'prolonged'},{id:'v',l:'Varies',n:'inconsistent'}]},
-  {id:'inter',name:'Between spells', sub:'Inter-ictal', range:'Days to continuous',
+  {id:'inter',name:'Between spells', sub:'Inter-ictal', range:'Symptom-free gap: days to none',
+   q:'How long is the symptom-free gap between spells, before symptoms return?',
    bg:'#EAF3DE',tx:'#3B6D11',
-   dur:[{id:'days',l:'Days',n:'clustered < 1 wk'},{id:'wks',l:'1–2 weeks',n:'frequent'},{id:'mo',l:'~ 1 month',n:'monthly'},{id:'mos',l:'Months',n:'infrequent'},{id:'ong',l:'Continuous',n:'always present'}]},
+   dur:[{id:'days',l:'Days',n:'clear for under a week between spells'},{id:'wks',l:'1–2 weeks',n:'clear for a week or two between spells'},{id:'mo',l:'~ 1 month',n:'clear for roughly a month between spells'},{id:'mos',l:'Months',n:'clear for several months between spells'},{id:'ong',l:'Continuous',n:'no symptom-free gap — something is always present, even mildly'}]},
 ];
 
 const SS=[
@@ -525,7 +526,7 @@ function buildHdr(pi){
 }
 function openDurPop(pi,el){
   closePop();const ph=PHASES[pi];const pop=document.createElement('div');pop.className='popover';
-  const t=document.createElement('div');t.className='pop-title';t.textContent=ph.name+' — how long does this phase typically last?';pop.appendChild(t);
+  const t=document.createElement('div');t.className='pop-title';t.textContent=ph.q||(ph.name+' — how long does this phase typically last?');pop.appendChild(t);
   const cur=durSel[ph.id];
   ph.dur.forEach(o=>{const b=document.createElement('button');b.className='pop-opt'+(cur===o.id?' sel':'');
     b.innerHTML=`<span>${o.l}</span><span class="pop-note">${o.n}</span>`;
